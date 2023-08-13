@@ -1,5 +1,6 @@
 import tkinter as tk
 from user_database.user_database import *
+from sensors.generate_data import sync
 
 # temp imports, delete later #TODO
 CALIBRI_FONT = "Calibri"
@@ -17,14 +18,19 @@ def gui():
                 print("Na postoji korisnik s tim korisnickim imenom i lozinkom.")
                 return
             print(f"Dobro dosli {self.user.name}")
-            # self.clear_root()
-            # self.create_main_screen()
+            self.clear_root()
+            self.create_main_screen()
 
         def logout(self):
             self.clear_root()
             self.create_login_screen()
 
+        def clear_root(self):
+            for child in self.root.winfo_children():
+                child.destroy()
+
         def create_login_screen(self):
+            root.geometry("500x300")
             self.frame_login = tk.Frame(
                 self.root, highlightbackground="black", highlightthickness=1
             )
@@ -42,7 +48,7 @@ def gui():
 
             lbl_username = tk.Label(
                 self.frame_login,
-                text="Korisnicko ime",
+                text="Korisničko ime",
                 font=(CALIBRI_FONT, 12),
             )
             lbl_username.pack()
@@ -65,10 +71,18 @@ def gui():
             btn_login = tk.Button(
                 self.frame_login, text="Prijavi me", command=self.login
             )
-            btn_login.pack()
+            btn_login.pack(pady=10)
+
+        def create_main_screen(self):
+            root.geometry("700x600")
+            self.frame_main_screen = tk.Frame(
+                self.root, highlightbackground="black", highlightthickness=1
+            )
+            self.frame_main_screen.pack(fill=tk.BOTH, expand=True)
+            btn_sync = tk.Button(self.frame_main_screen, text="SYNC", command=sync)
+            btn_sync.pack(side="right", pady=10)
 
     root = tk.Tk()
-    root.geometry("700x500")
     root.title("Py Flora Posude")
     py_flora_posude = PyFloraPosude(root)
     root.mainloop()

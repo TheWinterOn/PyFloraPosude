@@ -39,29 +39,30 @@ def db_get_users():
         return users
 
 
-def db_update_user(user):
+def db_update_user(name, surname, username, password):  # TODO preko user varijable
     with Session(bind=db_engine) as session:
-        current_user = session.query(User).filter(User.id == user.id)
+        current_user = session.query(User).filter(User.username == username)
         current_user.update(
             values={
-                "name": user.name,
-                "surname": user.surname,
-                "username": user.username,
-                "password": user.password,
+                "name": name,
+                "surname": surname,
+                "username": username,
+                "password": password,
             }
         )
         session.commit()
+        print(current_user)
 
 
 def db_delete_user(user_id):
     with Session(bind=db_engine) as session:
-        user = session.query(User).filter(User.id == user.id).one_or_none()
+        user = session.query(User).filter(User.id == user_id).one_or_none()
 
         if user:
             session.delete(user)
             session.commit()
         else:
-            pass  # TODO write message in gui that user doesn't exist
+            print("No such user!")  # TODO write message in gui that user doesn't exist
 
 
 # Login
@@ -76,9 +77,21 @@ def db_login(username, password):
         return user
 
 
-db_add_user(
-    name="Daniel",
-    surname="Zima",
-    username="admin",
-    password="2222",
-)
+# db_add_user(
+#     name="Daniel",
+#     surname="Zima",
+#     username="admin",
+#     password="admin",
+# )
+
+# db_update_user(
+#     name="Daniel",
+#     surname="Zima",
+#     username="admin",
+#     password="admin",
+# )
+
+
+# korisnici = db_get_users()
+# for item in korisnici:
+#     print(item.name, item.surname, item.username)

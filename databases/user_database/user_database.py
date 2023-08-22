@@ -6,7 +6,7 @@ Base = declarative_base()
 
 
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     surname = db.Column(db.String)
@@ -54,7 +54,7 @@ def db_update_user(name, surname, username, password):  # TODO preko user varija
         print(current_user)
 
 
-def db_delete_user(user_id):
+def db_delete_user(user_id):  # TODO mozda preko usernamea umjesto id-ja
     with Session(bind=db_engine) as session:
         user = session.query(User).filter(User.id == user_id).one_or_none()
 

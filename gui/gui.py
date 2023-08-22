@@ -1,6 +1,6 @@
 import tkinter as tk
-from user_database.user_database import *
-from sensors.generate_data import sync
+from databases.user_database.user_database import db_login
+from sensors.generate_sensor_data import sync, delete
 
 # temp imports, delete later #TODO
 CALIBRI_FONT = "Calibri"
@@ -81,6 +81,11 @@ def gui():
             self.frame_main_screen.pack(fill=tk.BOTH, expand=True)
             btn_sync = tk.Button(self.frame_main_screen, text="SYNC", command=sync)
             btn_sync.pack(side="right", pady=10)
+
+            btn_delete = tk.Button(
+                self.frame_main_screen, text="Delete", command=delete
+            )
+            btn_delete.pack(side="right", pady=10)
 
     root = tk.Tk()
     root.title("Py Flora Posude")

@@ -14,7 +14,7 @@ class User(Base):
     password = db.Column(db.String, nullable=False)
 
 
-db_engine = db.create_engine("sqlite:///user_database/user_database.db")
+db_engine = db.create_engine("sqlite:///databases/user_database/user_database.db")
 Base.metadata.create_all(bind=db_engine)
 
 
@@ -65,6 +65,12 @@ def db_delete_user(user_id):  # TODO mozda preko usernamea umjesto id-ja
             print("No such user!")  # TODO write message in gui that user doesn't exist
 
 
+def db_delete_users():
+    with Session(bind=db_engine) as session:
+        session.query(User).delete()
+        session.commit()
+
+
 # Login
 def db_login(username, password):
     with Session(db_engine) as session:
@@ -77,12 +83,15 @@ def db_login(username, password):
         return user
 
 
-# db_add_user(
-#     name="Daniel",
-#     surname="Zima",
-#     username="admin",
-#     password="admin",
-# )
+def add_default_user():
+    db_delete_users()
+    db_add_user(
+        name="Daniel",
+        surname="Zima",
+        username="admin",
+        password="admin",
+    )
+
 
 # db_update_user(
 #     name="Daniel",

@@ -19,7 +19,7 @@ class Plant(Base):
     pots = relationship("Pot", backref=backref("plant"))
 
 
-db_engine = db.create_engine("sqlite:///plant_database/plant_database.db")
+db_engine = db.create_engine("sqlite:///databases/plant_database/plant_database.db")
 Base.metadata.create_all(bind=db_engine)
 
 

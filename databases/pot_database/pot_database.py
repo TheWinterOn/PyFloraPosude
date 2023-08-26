@@ -10,10 +10,9 @@ class Pot(Base):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
     plant_id = db.Column(db.Integer, db.ForeignKey("plant.id"))
-    
 
 
-db_engine = db.create_engine("sqlite:///pot_database/pot_database.db")
+db_engine = db.create_engine("sqlite:///databases/pot_database/pot_database.db")
 Base.metadata.create_all(bind=db_engine)
 
 

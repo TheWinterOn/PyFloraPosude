@@ -17,7 +17,9 @@ class Data(Base):
     algebra_temperature = db.Column(db.Float)
 
 
-db_engine = db.create_engine("sqlite:///sensor_data_database/sensor_data_database.db")
+db_engine = db.create_engine(
+    "sqlite:///databases/sensor_data_database/sensor_data_database.db"
+)
 Base.metadata.create_all(bind=db_engine)
 
 
@@ -96,3 +98,4 @@ def db_update_data(
 def db_delete_data():
     with Session(bind=db_engine) as session:
         session.query(Data).delete()
+        session.commit()

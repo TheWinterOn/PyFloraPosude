@@ -43,7 +43,7 @@ def sync():
     # print(status_code)
     # print(current_temperature)
 
-    timestamp = dt.datetime.now().strftime("%A %d.%m.%Y %H:%M:%S").capitalize()
+    timestamp = dt.datetime.now()
     soil_moisture = round(random.uniform(MIN_SOIL_MOISTURE, MAX_SOIL_MOISTURE), N)
     ph = random.randint(MIN_PH, MAX_PH)
     salinity = round(random.uniform(MIN_SALINITY, MAX_SALINITY), N)
@@ -62,10 +62,6 @@ def sync():
         room_temperature,
         algebra_temperature,
     )
-
-
-def delete():
-    db_delete_data()
 
 
 def get_meteo_data():
@@ -87,3 +83,7 @@ def get_meteo_data():
             random.uniform(MIN_TEMPERATURE_ALGEBRA, MAX_TEMPERATURE_ALGEBRA), N
         )
     return current_temperature
+
+
+def clear_sensor_database():
+    db_delete_data()

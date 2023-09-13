@@ -39,19 +39,15 @@ def db_get_users():
         return users
 
 
-def db_update_user(name, surname, username, password):  # TODO preko user varijable
+def db_update_user(name, surname, username, password):
     with Session(bind=db_engine) as session:
-        current_user = session.query(User).filter(User.username == username)
-        current_user.update(
-            values={
-                "name": name,
-                "surname": surname,
-                "username": username,
-                "password": password,
-            }
-        )
+        user = session.query(User).first()
+        user.name = name
+        user.surname = surname
+        user.username = username
+        user.password = password
+
         session.commit()
-        print(current_user)
 
 
 def db_delete_user(user_id):  # TODO mozda preko usernamea umjesto id-ja

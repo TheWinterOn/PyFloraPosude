@@ -1,5 +1,5 @@
 import tkinter as tk
-from databases.user_database.user_database import db_login, db_get_users
+from databases.user_database.user_database import db_login, db_get_users, db_update_user
 from sensors.generate_sensor_data import sync
 
 
@@ -30,7 +30,13 @@ def gui():
             self.create_login_screen()
 
         def on_user_save(self):
-            pass
+            db_update_user(
+                self.user_name.get(),
+                self.user_surname.get(),
+                self.user_username.get(),
+                self.user_password.get(),
+            )
+            self.on_user_cancel()
 
         def on_user_cancel(self):
             self.clear_body()
@@ -141,7 +147,9 @@ def gui():
                 columnspan=4,
                 sticky=tk.E + tk.W + tk.N + tk.S,
             )
-            btn_sync = tk.Button(self.frame_body, font=font_btn, text="Sync")
+            btn_sync = tk.Button(
+                self.frame_body, font=font_btn, text="Sync", command=sync
+            )
             btn_sync.grid(row=1, column=4, padx=5, pady=5)
 
             self.frame_body.rowconfigure(0, weight=1)
@@ -150,7 +158,7 @@ def gui():
         def create_profile_screen(self):
             self.clear_body()
             self.users = db_get_users()
-            user = self.users[0]
+            user = self.users[0]  # postoji samo jedan korisnik
 
             lbl_profile = tk.Label(
                 self.frame_body,
@@ -166,9 +174,9 @@ def gui():
             )
             lbl_name.grid(row=2, column=0)
 
-            self.name = tk.StringVar()
-            self.name.set(user.name)
-            ent_name = tk.Entry(self.frame_body, textvariable=self.name)
+            self.user_name = tk.StringVar()
+            self.user_name.set(user.name)
+            ent_name = tk.Entry(self.frame_body, textvariable=self.user_name)
             ent_name.grid(row=3, column=0, padx=5, pady=5)
 
             lbl_surname = tk.Label(
@@ -178,9 +186,9 @@ def gui():
             )
             lbl_surname.grid(row=2, column=2)
 
-            self.surname = tk.StringVar()
-            self.surname.set(user.surname)
-            ent_surname = tk.Entry(self.frame_body, textvariable=self.surname)
+            self.user_surname = tk.StringVar()
+            self.user_surname.set(user.surname)
+            ent_surname = tk.Entry(self.frame_body, textvariable=self.user_surname)
             ent_surname.grid(row=3, column=2, padx=5, pady=5)
 
             lbl_username = tk.Label(
@@ -190,31 +198,35 @@ def gui():
             )
             lbl_username.grid(row=4, column=0)
 
-            self.username = tk.StringVar()
-            self.username.set(user.username)
-            ent_username = tk.Entry(self.frame_body, textvariable=self.username)
+            self.user_username = tk.StringVar()
+            self.user_username.set(user.username)
+            ent_username = tk.Entry(self.frame_body, textvariable=self.user_username)
             ent_username.grid(row=5, column=0, padx=5, pady=5)
 
             lbl_password = tk.Label(self.frame_body, text="Lozinka", font=font_label)
             lbl_password.grid(row=4, column=2)
 
-            self.password = tk.StringVar()
-            self.password.set(user.password)
+            self.user_password = tk.StringVar()
+            self.user_password.set(user.password)
             ent_password = tk.Entry(
-                self.frame_body, textvariable=self.password, show="*"
+                self.frame_body, textvariable=self.user_password, show="*"
             )
             ent_password.grid(row=5, column=2, padx=5, pady=5)
 
-            btn_save = tk.Button(self.frame_body, text="Spremi", font=font_btn, command=self.on_user_save)
+            btn_save = tk.Button(
+                self.frame_body, text="Spremi", font=font_btn, command=self.on_user_save
+            )
             btn_save.grid(row=6, column=0, padx=5, pady=5)
 
             btn_exit = tk.Button(
-                self.frame_body, text="Odustani", font=font_btn, command= self.on_user_cancel)
+                self.frame_body,
+                text="Odustani",
+                font=font_btn,
+                command=self.on_user_cancel,
+            )
             btn_exit.grid(row=6, column=2, padx=5, pady=5)
 
     root = tk.Tk()
     root.title("Py Flora Posude")
     py_flora_posude = PyFloraPosude(root)
     root.mainloop()
-
-

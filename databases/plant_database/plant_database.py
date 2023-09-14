@@ -2,6 +2,7 @@ import sqlalchemy as db
 from sqlalchemy.orm import Session, relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 
+URI = "databases/plant_database/plant_photos/"
 
 Base = declarative_base()
 
@@ -29,11 +30,12 @@ def db_add_plant(name, photo, soil_moisture, ph, salinity, light_level, temperat
         plant_exists = session.query(Plant).filter(Plant.name == name).one_or_none()
 
         if plant_exists:
+            print("Plant already exists in database!")
             return
 
         plant = Plant(
             name=name,
-            photo=photo,
+            photo=f"{URI}{photo}",
             soil_moisture=soil_moisture,
             ph=ph,
             salinity=salinity,
@@ -56,13 +58,15 @@ def db_get_plants():
         return plants
 
 
-def db_update_plant(name, photo, soil_moisture, ph, salinity, light_level, temperature):
+def db_update_plant(
+    id, name, photo, soil_moisture, ph, salinity, light_level, temperature
+):
     with Session(bind=db_engine) as session:
-        current_plant = session.query(Plant).filter(Plant.name == name)
-        current_plant.update(
+        plant = session.query(Plant).filter(Plant.id == id)
+        plant.update(
             values={
                 "name": name,
-                "photo": photo,
+                "photo": f"{URI}{photo}",
                 "soil_moisture": soil_moisture,
                 "ph": ph,
                 "salinity": salinity,
@@ -71,7 +75,6 @@ def db_update_plant(name, photo, soil_moisture, ph, salinity, light_level, tempe
             }
         )
         session.commit()
-        print(current_plant)
 
 
 def db_delete_plant(name):
@@ -82,34 +85,44 @@ def db_delete_plant(name):
             session.delete(plant)
             session.commit()
         else:
-            print(
-                "No such plant!"
-            )  # TODO write message in gui that plant doesn't exist
+            print("No such plant!")
 
 
-# name, photo, soil_moisture, ph, salinity, light_level, temperature
-predefined_plants = [
-    ["Aglaonema", "databases/plant_database/plant_photos/aglaonema.jpg"],
-    ["Aloe Vera", "databases/plant_database/plant_photos/aloe_vera.jpg"],
-    ["Biljka pauk", "databases/plant_database/plant_photos/biljka_pauk.jpg"],
-    ["Hoya", "databases/plant_database/plant_photos/hoya.jpg"],
-    ["Kaktus", "databases/plant_database/plant_photos/kaktua.jpg"],
-    ["Kalanhoa", "databases/plant_database/plant_photos/kalanhoa.jpg"],
-    ["Sansevijerija", "databases/plant_database/plant_photos/sansevijerija.jpg"],
-    ["Slonova noga", "databases/plant_database/plant_photos/slonova_noga.jpg"],
-    ["Zebra Haworthija", "databases/plant_database/plant_photos/zebra_haworthija.jpg"],
-    ["Zamija", "databases/plant_database/plant_photos/zamija.jpg"],
-    ["Zlatni puzavac", "databases/plant_database/plant_photos/zlatni_puzavac.jpg"],
-]
+def db_delete_plants():
+    with Session(bind=db_engine) as session:
+        session.query(Plant).delete()
+        session.commit()
 
 
-for plant in predefined_plants:
-    db_add_plant(
-        name=plant[0],
-        photo=plant[1],
-        soil_moisture=plant[2],
-        ph=plant[3],
-        salinity=plant[4],
-        light_level=plant[5],
-        temperature=plant[6],
-    )
+def add_default_plants():
+    db_delete_plants()
+
+    predefined_plants = [
+        ["Aglaonema", "aglaonema.jpg"],
+        ["Aloe Vera", "aloe_vera.jpg"],
+        ["Biljka pauk", "biljka_pauk.jpg"],
+        ["Hoya", "hoya.jpg"],
+        ["Kaktus", "kaktua.jpg"],
+        ["Kalanhoa", "kalanhoa.jpg"],
+        ["Sansevijerija", "sansevijerija.jpg"],
+        ["Slonova noga", "slonova_noga.jpg"],
+        ["Zebra Haworthija", "zebra_haworthija.jpg"],
+        ["Zamija", "zamija.jpg"],
+        ["Zlatni puzavac", "zlatni_puzavac.jpg"],
+    ]
+
+    for plant in predefined_plants:
+        db_add_plant(
+            name=plant[0],
+            photo=plant[1],
+            # soil_moisture=plant[2],
+            # ph=plant[3],
+            # salinity=plant[4],
+            # light_level=plant[5],
+            # temperature=plant[6],
+            soil_moisture=None,
+            ph=None,
+            salinity=None,
+            light_level=None,
+            temperature=None,
+        )

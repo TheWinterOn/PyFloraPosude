@@ -19,11 +19,7 @@ Base.metadata.create_all(bind=db_engine)
 # CRUD Pot
 def db_add_pot(name, photo, soil_moisture, ph, salinity, light_level, temperature):
     with Session(bind=db_engine) as session:
-        pot_exists = session.query(Pot).filter(Pot.name == name).one_or_none()
-
-        if pot_exists:
-            return
-
+        # Jedina unikatna stvar u pot bazi su id-evi. Imena nisu unikatna te zbog toga nema provjere.
         pot = Pot(
             name=name,
             photo=photo,
@@ -49,9 +45,11 @@ def db_get_pots():
         return pots
 
 
-def db_update_pot(name, photo, soil_moisture, ph, salinity, light_level, temperature):
+def db_update_pot(
+    id, name, photo, soil_moisture, ph, salinity, light_level, temperature
+):
     with Session(bind=db_engine) as session:
-        current_pot = session.query(Pot).filter(Pot.name == name)
+        current_pot = session.query(Pot).filter(Pot.id == id)
         current_pot.update(
             values={
                 "name": name,
@@ -64,7 +62,6 @@ def db_update_pot(name, photo, soil_moisture, ph, salinity, light_level, tempera
             }
         )
         session.commit()
-        print(current_pot)
 
 
 def db_delete_pot(name):
@@ -75,4 +72,23 @@ def db_delete_pot(name):
             session.delete(pot)
             session.commit()
         else:
-            print("No such pot!")  # TODO write message in gui that pot doesn't exist
+            print("No such pot!")
+
+
+def db_delete_pots():
+    with Session(bind=db_engine) as session:
+        session.query(Pot).delete()
+        session.commit()
+
+
+def add_default_pot():
+    db_delete_pots()
+    db_add_pot(
+        name="PRAZNA posuda",
+        photo=None,
+        soil_moisture=None,
+        ph=None,
+        salinity=None,
+        light_level=None,
+        temperature=None,
+    )

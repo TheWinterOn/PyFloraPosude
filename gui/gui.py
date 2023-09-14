@@ -31,6 +31,7 @@ def gui():
 
         def on_user_save(self):
             db_update_user(
+                self.user_id,
                 self.user_name.get(),
                 self.user_surname.get(),
                 self.user_username.get(),
@@ -159,6 +160,7 @@ def gui():
             self.clear_body()
             self.users = db_get_users()
             user = self.users[0]  # postoji samo jedan korisnik
+            self.user_id = user.id
 
             lbl_profile = tk.Label(
                 self.frame_body,

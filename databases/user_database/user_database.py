@@ -39,26 +39,36 @@ def db_get_users():
         return users
 
 
-def db_update_user(name, surname, username, password):
+def db_update_user(id, name, surname, username, password):
     with Session(bind=db_engine) as session:
-        user = session.query(User).first()
-        user.name = name
-        user.surname = surname
-        user.username = username
-        user.password = password
+        # user = session.query(User).first()
+        # user.name = name
+        # user.surname = surname
+        # user.username = username
+        # user.password = password
+
+        user = session.query(User).filter(User.id == id)
+        user.update(
+            values={
+                "name": name,
+                "surname": surname,
+                "username": username,
+                "password": password,
+            }
+        )
 
         session.commit()
 
 
-def db_delete_user(user_id):  # TODO mozda preko usernamea umjesto id-ja
+def db_delete_user(username):
     with Session(bind=db_engine) as session:
-        user = session.query(User).filter(User.id == user_id).one_or_none()
+        user = session.query(User).filter(User.username == username).one_or_none()
 
         if user:
             session.delete(user)
             session.commit()
         else:
-            print("No such user!")  # TODO write message in gui that user doesn't exist
+            print("No such user!")
 
 
 def db_delete_users():
@@ -87,14 +97,6 @@ def add_default_user():
         username="admin",
         password="admin",
     )
-
-
-# db_update_user(
-#     name="Daniel",
-#     surname="Zima",
-#     username="admin",
-#     password="admin",
-# )
 
 
 # korisnici = db_get_users()

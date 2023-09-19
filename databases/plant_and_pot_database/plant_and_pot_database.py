@@ -2,7 +2,7 @@ import sqlalchemy as db
 from sqlalchemy.orm import Session, relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 
-URI = "databases/plant_database/plant_photos/"
+URI = "databases/plant_and_pot_database/plant_photos/"
 
 Base = declarative_base()
 
@@ -20,7 +20,16 @@ class Plant(Base):
     pots = relationship("Pot", backref=backref("plant"))
 
 
-db_engine = db.create_engine("sqlite:///databases/plant_database/plant_database.db")
+class Pot(Base):
+    __tablename__ = "pot"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+    plant_id = db.Column(db.Integer, db.ForeignKey("plant.id"))
+
+
+db_engine = db.create_engine(
+    "sqlite:///databases/plant_and_pot_database/plant_and_pot_database.db"
+)
 Base.metadata.create_all(bind=db_engine)
 
 
@@ -126,3 +135,57 @@ def add_default_plants():
             light_level=None,
             temperature=None,
         )
+
+
+# CRUD Pot
+def db_add_pot(name):
+    with Session(bind=db_engine) as session:
+        # Jedina unikatna stvar u pot bazi su id-evi. Imena nisu unikatna te zbog toga nema provjere.
+        pot = Pot(name=name)
+        session.add(pot)
+        session.commit()
+
+
+def db_get_pot(id):
+    with Session(bind=db_engine) as session:
+        pot = session.query(Pot).filter(Pot.id == id).one_or_none()
+        return pot
+
+
+def db_get_pots():
+    with Session(bind=db_engine) as session:
+        pots = session.query(Pot).all()
+        return pots
+
+
+def db_update_pot(id, name):
+    with Session(bind=db_engine) as session:
+        current_pot = session.query(Pot).filter(Pot.id == id)
+        current_pot.update(
+            values={
+                "name": name,
+            }
+        )
+        session.commit()
+
+
+def db_delete_pot(name):
+    with Session(bind=db_engine) as session:
+        pot = session.query(Pot).filter(Pot.name == name).one_or_none()
+
+        if pot:
+            session.delete(pot)
+            session.commit()
+        else:
+            print("No such pot!")
+
+
+def db_delete_pots():
+    with Session(bind=db_engine) as session:
+        session.query(Pot).delete()
+        session.commit()
+
+
+def add_default_pot():
+    db_delete_pots()
+    db_add_pot(name="PRAZNA posuda")

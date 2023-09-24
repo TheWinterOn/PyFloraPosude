@@ -37,7 +37,6 @@ Base.metadata.create_all(bind=db_engine)
 def db_add_plant(name, photo, soil_moisture, ph, salinity, light_level, temperature):
     with Session(bind=db_engine) as session:
         plant_exists = session.query(Plant).filter(Plant.name == name).one_or_none()
-
         if plant_exists:
             print("Plant already exists in database!")
             return
@@ -86,6 +85,20 @@ def db_update_plant(
         session.commit()
 
 
+# TODO delete this, for testing purposes only
+def db_print_plant(
+    id, name, photo, soil_moisture, ph, salinity, light_level, temperature
+):
+    print(id)
+    print(name)
+    print(photo)
+    print(soil_moisture)
+    print(ph)
+    print(salinity)
+    print(light_level)
+    print(temperature)
+
+
 def db_delete_plant(name):
     with Session(bind=db_engine) as session:
         plant = session.query(Plant).filter(Plant.name == name).one_or_none()
@@ -101,6 +114,12 @@ def db_delete_plants():
     with Session(bind=db_engine) as session:
         session.query(Plant).delete()
         session.commit()
+
+
+def db_remove_plant_photo_uri(plant):
+    if URI in plant.photo:
+        plant.photo = plant.photo.replace(URI, "")
+    return plant
 
 
 def add_default_plants():
@@ -189,3 +208,37 @@ def db_delete_pots():
 def add_default_pot():
     db_delete_pots()
     db_add_pot(name="PRAZNA posuda")
+
+
+# Handling bad input data
+def check_input_data(soil_moisture, ph, salinity, light_level, temperature):
+    soil_moisture = check_if_float(soil_moisture)
+    ph = check_if_int(ph)
+    salinity = check_if_float(salinity)
+    light_level = check_if_int(light_level)
+    temperature = check_if_float(temperature)
+    return soil_moisture, ph, salinity, light_level, temperature
+
+
+def check_if_int(value):
+    try:
+        int(value)
+        return value
+    except ValueError:
+        a = None
+        return a
+    except TypeError:
+        a = None
+        return a
+
+
+def check_if_float(value):
+    try:
+        float(value)
+        return value
+    except ValueError:
+        a = None
+        return a
+    except TypeError:
+        a = None
+        return a

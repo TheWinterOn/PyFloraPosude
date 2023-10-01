@@ -1,4 +1,4 @@
-from gui.gui import *
+from gui.gui import gui
 from databases.user_database.user_database import add_default_user
 from databases.plant_and_pot_database.plant_and_pot_database import (
     add_default_pot,

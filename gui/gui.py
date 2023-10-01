@@ -16,8 +16,10 @@ from databases.plant_and_pot_database.plant_and_pot_database import (
     db_delete_pot,
     db_get_pot,
     db_get_pots,
+    sync_all,
 )
-from sensors.generate_sensor_data import sync
+
+from sensors.generate_sensor_data import sync_one
 
 
 def gui():
@@ -174,18 +176,18 @@ def gui():
                 font=font_btn,
                 command=self.plant_management,
             )
-            btn_plants.grid(row=0, column=1, padx=5, pady=5)
+            btn_plants.grid(row=0, column=3, padx=5, pady=5)
             btn_profile = tk.Button(
                 self.frame_header,
                 text="Moj profil",
                 font=font_btn,
                 command=self.create_profile_screen,
             )
-            btn_profile.grid(row=0, column=2, padx=5, pady=5)
+            btn_profile.grid(row=0, column=4, padx=5, pady=5)
             btn_logout = tk.Button(
                 self.frame_header, text="Odjava", font=font_btn, command=self.logout
             )
-            btn_logout.grid(row=0, column=3, padx=5, pady=5)
+            btn_logout.grid(row=0, column=5, padx=5, pady=5)
 
         def create_login_screen(self):
             self.root.geometry("500x300")
@@ -240,8 +242,8 @@ def gui():
             self.frame_header = tk.Frame(
                 self.root, bg="grey", highlightbackground="black", highlightthickness=1
             )
-            self.frame_header.columnconfigure((0, 1, 2, 3), weight=1, minsize=100)
-            self.frame_header.grid(row=0, column=0, columnspan=4)
+            self.frame_header.columnconfigure((0, 1, 2, 3, 4, 5), weight=1, minsize=100)
+            self.frame_header.grid(row=0, column=0, columnspan=6)
 
             # header
             self.create_header()
@@ -254,13 +256,13 @@ def gui():
                 # width=1000,
                 # height=550,
             )
-            self.frame_body.columnconfigure((0, 1, 2, 3), weight=1, minsize=105)
-            self.frame_body.grid(row=1, column=0, columnspan=4)
+            self.frame_body.columnconfigure((0, 1, 2, 3, 4, 5), weight=1, minsize=105)
+            self.frame_body.grid(row=1, column=0, columnspan=6)
             # self.frame_body.grid_propagate(0)
             btn_sync = tk.Button(
-                self.frame_body, text="Sync", font=font_btn, command=sync
+                self.frame_body, text="Sync", font=font_btn, command=sync_all
             )
-            btn_sync.grid(row=1, column=4, padx=5, pady=5, ipadx=5, ipady=5)
+            btn_sync.grid(row=1, column=5, padx=5, pady=5, ipadx=5, ipady=5)
 
             btn_add_pot = tk.Button(
                 self.frame_body,
@@ -270,7 +272,7 @@ def gui():
                 height=4,
                 command=self.create_new_pot,
             )
-            btn_add_pot.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
+            btn_add_pot.grid(row=2, column=0, columnspan=3, padx=5, pady=5)
 
             self.show_all_pots()
 
@@ -285,58 +287,58 @@ def gui():
                 text="Uredi korisničke podatke",
                 font=font_title,
             )
-            lbl_profile.grid(row=1, column=0, columnspan=4, pady=10)
+            lbl_profile.grid(row=1, column=0, columnspan=6, pady=10)
 
             lbl_name = tk.Label(
                 self.frame_body,
                 text="Ime",
                 font=font_label,
             )
-            lbl_name.grid(row=2, column=1)
+            lbl_name.grid(row=2, column=1, columnspan=2)
 
             self.user_name = tk.StringVar()
             self.user_name.set(user.name)
             ent_name = tk.Entry(self.frame_body, textvariable=self.user_name)
-            ent_name.grid(row=3, column=1, padx=10, pady=5)
+            ent_name.grid(row=3, column=1, columnspan=2, padx=10, pady=5)
 
             lbl_surname = tk.Label(
                 self.frame_body,
                 text="Prezime",
                 font=font_label,
             )
-            lbl_surname.grid(row=2, column=2)
+            lbl_surname.grid(row=2, column=3, columnspan=2)
 
             self.user_surname = tk.StringVar()
             self.user_surname.set(user.surname)
             ent_surname = tk.Entry(self.frame_body, textvariable=self.user_surname)
-            ent_surname.grid(row=3, column=2, padx=10, pady=5)
+            ent_surname.grid(row=3, column=3, columnspan=2, padx=10, pady=5)
 
             lbl_username = tk.Label(
                 self.frame_body,
                 text="Korisničko ime",
                 font=font_label,
             )
-            lbl_username.grid(row=4, column=1)
+            lbl_username.grid(row=4, column=1, columnspan=2)
 
             self.user_username = tk.StringVar()
             self.user_username.set(user.username)
             ent_username = tk.Entry(self.frame_body, textvariable=self.user_username)
-            ent_username.grid(row=5, column=1, padx=10, pady=5)
+            ent_username.grid(row=5, column=1, columnspan=2, padx=10, pady=5)
 
             lbl_password = tk.Label(self.frame_body, text="Lozinka", font=font_label)
-            lbl_password.grid(row=4, column=2)
+            lbl_password.grid(row=4, column=3, columnspan=2)
 
             self.user_password = tk.StringVar()
             self.user_password.set(user.password)
             ent_password = tk.Entry(
                 self.frame_body, textvariable=self.user_password, show="*"
             )
-            ent_password.grid(row=5, column=2, padx=10, pady=5)
+            ent_password.grid(row=5, column=3, columnspan=2, padx=10, pady=5)
 
             btn_save = tk.Button(
                 self.frame_body, text="Spremi", font=font_btn, command=self.on_user_save
             )
-            btn_save.grid(row=6, column=1, padx=10, pady=5)
+            btn_save.grid(row=6, column=1, columnspan=2, padx=10, pady=5)
 
             btn_exit = tk.Button(
                 self.frame_body,
@@ -344,7 +346,7 @@ def gui():
                 font=font_btn,
                 command=self.on_user_cancel,
             )
-            btn_exit.grid(row=6, column=2, padx=10, pady=5)
+            btn_exit.grid(row=6, column=3, columnspan=2, padx=10, pady=5)
 
         def plant_management(self):
             self.clear_body()
@@ -352,7 +354,7 @@ def gui():
             lbl_plants = tk.Label(
                 self.frame_body, text="Dodaj, uredi ili ukloni biljku", font=font_title
             )
-            lbl_plants.grid(row=1, column=0, columnspan=4, pady=10)
+            lbl_plants.grid(row=1, column=0, columnspan=6, pady=10)
 
             btn_add_plant = tk.Button(
                 self.frame_body,
@@ -360,86 +362,86 @@ def gui():
                 font=font_btn,
                 command=self.on_plant_add,
             )
-            btn_add_plant.grid(row=2, column=0, padx=5, pady=5, ipadx=5, ipady=5)
+            btn_add_plant.grid(row=2, column=1, padx=5, pady=5, ipadx=5, ipady=5)
             btn_edit_plant = tk.Button(
                 self.frame_body,
                 text="Uredi\nbiljke",
                 font=font_btn,
                 command=self.on_plant_edit,
             )
-            btn_edit_plant.grid(row=2, column=1, padx=5, pady=5, ipadx=5, ipady=5)
+            btn_edit_plant.grid(row=2, column=2, padx=5, pady=5, ipadx=5, ipady=5)
             btn_delete_plant = tk.Button(
                 self.frame_body,
                 text="Ukloni\nbiljku",
                 font=font_btn,
                 command=self.on_plant_delete,
             )
-            btn_delete_plant.grid(row=2, column=2, padx=5, pady=5, ipadx=5, ipady=5)
+            btn_delete_plant.grid(row=2, column=3, padx=5, pady=5, ipadx=5, ipady=5)
             btn_return = tk.Button(
                 self.frame_body,
                 text="Povratak",
                 font=font_btn,
                 command=self.on_user_cancel,
             )
-            btn_return.grid(row=2, column=3, padx=5, pady=5, ipadx=5, ipady=5)
+            btn_return.grid(row=2, column=4, padx=5, pady=5, ipadx=5, ipady=5)
 
         def create_plant_form(self):
             lbl_name = tk.Label(self.frame_body, text="Naziv biljke", font=font_label)
-            lbl_name.grid(row=3, column=1)
+            lbl_name.grid(row=3, column=1, columnspan=2)
             self.plant_id = tk.IntVar()
             self.plant_name = tk.StringVar()
             ent_plant_name = tk.Entry(self.frame_body, textvariable=self.plant_name)
-            ent_plant_name.grid(row=4, column=1, padx=5, pady=5)
+            ent_plant_name.grid(row=4, column=1, columnspan=2, padx=5, pady=5)
 
             lbl_photo = tk.Label(self.frame_body, text="Slika", font=font_label)
-            lbl_photo.grid(row=5, column=1)
+            lbl_photo.grid(row=5, column=1, columnspan=2)
             self.plant_photo = tk.StringVar()
             ent_plant_photo = tk.Entry(self.frame_body, textvariable=self.plant_photo)
-            ent_plant_photo.grid(row=6, column=1, padx=5, pady=5)
+            ent_plant_photo.grid(row=6, column=1, columnspan=2, padx=5, pady=5)
 
             lbl_soil_moisture = tk.Label(
                 self.frame_body, text="Vlažnost tla", font=font_label
             )
-            lbl_soil_moisture.grid(row=7, column=1)
+            lbl_soil_moisture.grid(row=7, column=1, columnspan=2)
             self.plant_soil_moisture = tk.StringVar()
             ent_plant_soil_moisture = tk.Entry(
                 self.frame_body, textvariable=self.plant_soil_moisture
             )
-            ent_plant_soil_moisture.grid(row=8, column=1, padx=5, pady=5)
+            ent_plant_soil_moisture.grid(row=8, column=1, columnspan=2, padx=5, pady=5)
 
             lbl_ph = tk.Label(self.frame_body, text="pH vrijednost", font=font_label)
-            lbl_ph.grid(row=9, column=1)
+            lbl_ph.grid(row=9, column=1, columnspan=2)
             self.plant_ph = tk.StringVar()
             ent_plant_ph = tk.Entry(self.frame_body, textvariable=self.plant_ph)
-            ent_plant_ph.grid(row=10, column=1, padx=5, pady=5)
+            ent_plant_ph.grid(row=10, column=1, columnspan=2, padx=5, pady=5)
 
             lbl_salinity = tk.Label(self.frame_body, text="Salinitet", font=font_label)
-            lbl_salinity.grid(row=3, column=2)
+            lbl_salinity.grid(row=3, column=3, columnspan=2)
             self.plant_salinity = tk.StringVar()
             ent_plant_salinity = tk.Entry(
                 self.frame_body, textvariable=self.plant_salinity
             )
-            ent_plant_salinity.grid(row=4, column=2, padx=5, pady=5)
+            ent_plant_salinity.grid(row=4, column=3, columnspan=2, padx=5, pady=5)
 
             lbl_light_level = tk.Label(
                 self.frame_body, text="Razina svjetlosti", font=font_label
             )
-            lbl_light_level.grid(row=5, column=2)
+            lbl_light_level.grid(row=5, column=3, columnspan=2)
             self.plant_light_level = tk.StringVar()
             ent_plant_light_level = tk.Entry(
                 self.frame_body, textvariable=self.plant_light_level
             )
-            ent_plant_light_level.grid(row=6, column=2, padx=5, pady=5)
+            ent_plant_light_level.grid(row=6, column=3, columnspan=2, padx=5, pady=5)
 
             lbl_temperature = tk.Label(
                 self.frame_body, text="Temperatura", font=font_label
             )
-            lbl_temperature.grid(row=7, column=2)
+            lbl_temperature.grid(row=7, column=3, columnspan=2)
             self.plant_temperature = tk.StringVar()
             ent_plant_temperature = tk.Entry(
                 self.frame_body, textvariable=self.plant_temperature
             )
-            ent_plant_temperature.grid(row=8, column=2, padx=5, pady=5)
+            ent_plant_temperature.grid(row=8, column=3, columnspan=2, padx=5, pady=5)
 
             if self.action == "add":
                 self.set_default_form_values()
@@ -454,7 +456,7 @@ def gui():
                     font=font_btn,
                     command=self.on_plant_save,
                 )
-                btn_save.grid(row=11, column=1, padx=5, pady=5)
+                btn_save.grid(row=11, column=1, columnspan=2, padx=5, pady=5)
             else:
                 btn_delete = tk.Button(
                     self.frame_body,
@@ -462,7 +464,7 @@ def gui():
                     font=font_btn,
                     command=self.on_plant_remove,
                 )
-                btn_delete.grid(row=11, column=1, padx=5, pady=5)
+                btn_delete.grid(row=11, column=1, columnspan=2, padx=5, pady=5)
 
             btn_exit = tk.Button(
                 self.frame_body,
@@ -470,7 +472,7 @@ def gui():
                 font=font_btn,
                 command=self.on_plant_cancel,
             )
-            btn_exit.grid(row=11, column=2, padx=5, pady=5)
+            btn_exit.grid(row=11, column=3, columnspan=2, padx=5, pady=5)
 
         def create_drop_down_menu(self):
             self.plants = db_get_plants()
@@ -482,7 +484,7 @@ def gui():
                 values=plant_names,
                 textvariable=self.selected_plant,
             )
-            drop_menu.grid(row=2, column=0, columnspan=4, pady=5)
+            drop_menu.grid(row=2, column=0, columnspan=6, pady=5)
             drop_menu.current()
             drop_menu.bind("<<ComboboxSelected>>", self.callbackFunc)
 
@@ -492,7 +494,7 @@ def gui():
             lbl_plant = tk.Label(
                 self.frame_body, text="Dodaj novu biljku", font=font_title
             )
-            lbl_plant.grid(row=1, column=0, columnspan=4, pady=10)
+            lbl_plant.grid(row=1, column=0, columnspan=6, pady=10)
             self.create_plant_form()
 
         def edit_plant_page(self):
@@ -504,7 +506,7 @@ def gui():
                 text="Uredi podatke o biljkama",
                 font=font_title,
             )
-            lbl_profile.grid(row=1, column=0, columnspan=4, pady=10)
+            lbl_profile.grid(row=1, column=0, columnspan=6, pady=10)
 
             self.create_drop_down_menu()
             self.create_plant_form()
@@ -518,7 +520,7 @@ def gui():
                 text="Ukloni biljku",
                 font=font_title,
             )
-            lbl_profile.grid(row=1, column=0, columnspan=4, pady=10)
+            lbl_profile.grid(row=1, column=0, columnspan=6, pady=10)
 
             self.create_drop_down_menu()
             self.create_plant_form()
@@ -529,12 +531,12 @@ def gui():
             lbl_add_pot = tk.Label(
                 self.frame_body, text="Dodaj novu posudu", font=font_title
             )
-            lbl_add_pot.grid(row=1, column=0, columnspan=4, pady=10)
+            lbl_add_pot.grid(row=1, column=0, columnspan=6, pady=10)
             lbl_name = tk.Label(self.frame_body, text="Naziv posude", font=font_label)
-            lbl_name.grid(row=3, column=1)
+            lbl_name.grid(row=3, column=1, columnspan=2)
             self.pot_name = tk.StringVar()
             ent_pot_name = tk.Entry(self.frame_body, textvariable=self.pot_name)
-            ent_pot_name.grid(row=4, column=1, padx=5, pady=5)
+            ent_pot_name.grid(row=4, column=1, columnspan=2, padx=5, pady=5)
 
             self.plant_name = tk.StringVar()
             self.create_drop_down_menu()
@@ -545,7 +547,7 @@ def gui():
                 font=font_btn,
                 command=self.on_pot_save,
             )
-            btn_save.grid(row=5, column=1, padx=5, pady=5)
+            btn_save.grid(row=5, column=1, columnspan=2, padx=5, pady=5)
 
             btn_exit = tk.Button(
                 self.frame_body,
@@ -553,12 +555,12 @@ def gui():
                 font=font_btn,
                 command=self.on_pot_cancel,
             )
-            btn_exit.grid(row=5, column=2, padx=5, pady=5)
+            btn_exit.grid(row=5, column=3, columnspan=2, padx=5, pady=5)
 
         def create_pot_frame(self, pot, row, column):
             lbl_frm_pot = tk.LabelFrame(self.frame_body)
             # lbl_frm_pot.columnconfigure(minsize=100)
-            lbl_frm_pot.grid(row=row, column=column, columnspan=2, padx=5, pady=5)
+            lbl_frm_pot.grid(row=row, column=column, columnspan=3, padx=5, pady=5)
 
             if pot.plant_id:
                 plant = db_get_plant_by_id(pot.plant_id)
@@ -572,15 +574,17 @@ def gui():
                 all_image_labels.append(lbl_image)
 
             lbl_pot_name = tk.Label(lbl_frm_pot, text="Naziv", font=font_label)
-            lbl_pot_name.grid(row=row, column=column + 1)
+            lbl_pot_name.grid(row=row, column=column + 1, columnspan=2)
             btn_pot_name = tk.Button(
-                lbl_frm_pot, text=pot.name, command=self.on_pot_button
+                lbl_frm_pot,
+                text=pot.name,
+                # command=self.on_pot_button(pot_name="Boravak"),
             )
-            btn_pot_name.grid(row=row + 1, column=column + 1)
+            btn_pot_name.grid(row=row + 1, column=column + 1, columnspan=2)
             pot_status = tk.StringVar()
             pot_status.set("Status\n" + "OK")
             lbl_pot_status = tk.Label(lbl_frm_pot, textvariable=pot_status)
-            lbl_pot_status.grid(row=row + 3, column=column + 1)
+            lbl_pot_status.grid(row=row + 3, column=column + 1, columnspan=2)
 
         def show_all_pots(self):
             for label in all_image_labels:
@@ -590,14 +594,22 @@ def gui():
             column = 0
             for pot in self.pots:
                 if column == 0:
-                    column = 2
-                elif column == 2:
+                    column = 3
+                elif column == 3:
                     column = 0
                     row = row + 1
                 self.create_pot_frame(pot, row, column)
 
-        def on_pot_button(self):
-            pass  # TODO
+        def on_pot_button(self, pot_name):
+            self.clear_body()
+            pot = db_get_pot(pot_name)
+            btn_sync = tk.Button(
+                self.frame_body, text="Sync", font=font_btn, command=sync_one
+            )
+            btn_sync.grid(row=1, column=5, padx=5, pady=5, ipadx=5, ipady=5)
+
+            lbl_pot_name = tk.Label(self.frame_body, text=pot.name, font=font_header)
+            lbl_pot_name.grid(row=2, column=0)
 
     all_image_labels = []
     root = tk.Tk()

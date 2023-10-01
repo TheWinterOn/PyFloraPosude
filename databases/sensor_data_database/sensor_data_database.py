@@ -57,7 +57,7 @@ def db_add_data(
 
         data = Data(
             timestamp=timestamp,
-            pot=pot_name,
+            pot_name=pot_name,
             soil_moisture=soil_moisture,
             ph=ph,
             salinity=salinity,

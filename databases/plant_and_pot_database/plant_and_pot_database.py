@@ -1,6 +1,7 @@
 import sqlalchemy as db
 from sqlalchemy.orm import Session, relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
+from sensors.generate_sensor_data import sync_one
 
 URI = "databases/plant_and_pot_database/plant_photos/"
 
@@ -176,9 +177,9 @@ def db_add_pot(pot_name, plant_name):
         session.commit()
 
 
-def db_get_pot(id):
+def db_get_pot(name):
     with Session(bind=db_engine) as session:
-        pot = session.query(Pot).filter(Pot.id == id).one_or_none()
+        pot = session.query(Pot).filter(Pot.name == name).one_or_none()
         return pot
 
 
@@ -219,6 +220,9 @@ def db_delete_pots():
 def add_default_pot():
     db_delete_pots()
     db_add_pot(pot_name="PRAZNA posuda", plant_name=None)
+    db_add_pot(pot_name="Boravak", plant_name="Kaktus")
+    db_add_pot(pot_name="Kuhinja", plant_name="Hoya")
+    sync_all()
 
 
 # Handling bad input data
@@ -253,3 +257,11 @@ def check_if_float(value):
     except TypeError:
         a = None
         return a
+
+
+# Funkcija Sync gumba na glavnoj stranici. Uzima mjerenja senzora za sve postojece posude koje u sebi imaju biljku i nisu potrgane i zapisuje ih u bazu
+def sync_all():
+    pots = db_get_pots()
+    for pot in pots:
+        if pot.name != "PRAZNA posuda":  # TODO dodati uvijet za potrganu posudu
+            sync_one(pot.name)

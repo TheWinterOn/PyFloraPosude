@@ -8,12 +8,15 @@ from databases.sensor_data_database.sensor_data_database import (
     db_get_data,
     db_delete_data,
 )
+
+# from databases.plant_and_pot_database.plant_and_pot_database import db_get_pots
 import json
+
 
 MIN_SOIL_MOISTURE = 1.0
 MAX_SOIL_MOISTURE = 30.0
-MIN_PH = 0
-MAX_PH = 14
+MIN_PH = 0.0
+MAX_PH = 14.0
 MIN_SALINITY = 1.0
 MAX_SALINITY = 5.0
 MIN_LIGHT_LEVEL = 200
@@ -29,7 +32,7 @@ LOCATION_KEY = "1606699"  # Crnomerec, Zagreb
 URL = "http://dataservice.accuweather.com/currentconditions/v1/"
 
 
-def sync(pot_name):
+def sync_one(pot_name):
     locale.setlocale(locale.LC_TIME, "hr_HR")
 
     # print(dt.datetime.now().strftime("%A %d.%m.%Y %H:%M:%S").capitalize())
@@ -45,7 +48,7 @@ def sync(pot_name):
 
     timestamp = dt.datetime.now()
     soil_moisture = round(random.uniform(MIN_SOIL_MOISTURE, MAX_SOIL_MOISTURE), N)
-    ph = random.randint(MIN_PH, MAX_PH)
+    ph = round(random.uniform(MIN_PH, MAX_PH), N)
     salinity = round(random.uniform(MIN_SALINITY, MAX_SALINITY), N)
     light_level = random.randint(MIN_LIGHT_LEVEL, MAX_LIGHT_LEVEL)
     room_temperature = round(

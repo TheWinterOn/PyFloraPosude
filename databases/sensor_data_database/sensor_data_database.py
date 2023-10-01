@@ -8,9 +8,10 @@ Base = declarative_base()
 class Data(Base):
     __tablename__ = "data"
     id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime, unique=True)
+    timestamp = db.Column(db.DateTime)
+    pot_name = db.Column(db.String)
     soil_moisture = db.Column(db.Float)
-    ph = db.Column(db.Integer)
+    ph = db.Column(db.Float)
     salinity = db.Column(db.Float)
     light_level = db.Column(db.Integer)
     room_temperature = db.Column(db.Float)
@@ -26,6 +27,7 @@ Base.metadata.create_all(bind=db_engine)
 # CRUD Data
 def db_add_data(
     timestamp,
+    pot_name,
     soil_moisture,
     ph,
     salinity,
@@ -35,12 +37,15 @@ def db_add_data(
 ):
     with Session(bind=db_engine) as session:
         data_exists = (
-            session.query(Data).filter(Data.timestamp == timestamp).one_or_none()
+            session.query(Data)
+            .filter(db.and_(Data.timestamp == timestamp, Data.pot_name == pot_name))
+            .one_or_none()
         )
 
         if data_exists:
             db_update_data(
                 timestamp,
+                pot_name,
                 soil_moisture,
                 ph,
                 salinity,
@@ -52,6 +57,7 @@ def db_add_data(
 
         data = Data(
             timestamp=timestamp,
+            pot=pot_name,
             soil_moisture=soil_moisture,
             ph=ph,
             salinity=salinity,
@@ -71,6 +77,7 @@ def db_get_data():
 
 def db_update_data(
     timestamp,
+    pot_name,
     soil_moisture,
     ph,
     salinity,
@@ -79,10 +86,13 @@ def db_update_data(
     algebra_temperature,
 ):
     with Session(bind=db_engine) as session:
-        current_data = session.query(Data).filter(Data.timestamp == timestamp)
+        current_data = session.query(Data).filter(
+            db.and_(Data.timestamp == timestamp, Data.pot_name == pot_name)
+        )
         current_data.update(
             values={
                 # "timestamp": timestamp,
+                "pot": pot_name,
                 "soil_moisture": soil_moisture,
                 "ph": ph,
                 "salinity": salinity,

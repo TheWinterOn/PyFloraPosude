@@ -13,7 +13,7 @@ class Plant(Base):
     name = db.Column(db.String, nullable=False, unique=True)
     photo = db.Column(db.String, nullable=False)
     soil_moisture = db.Column(db.Float)
-    ph = db.Column(db.Integer)
+    ph = db.Column(db.Float)
     salinity = db.Column(db.Float)
     light_level = db.Column(db.Integer)
     temperature = db.Column(db.Float)
@@ -224,7 +224,7 @@ def add_default_pot():
 # Handling bad input data
 def check_input_data(soil_moisture, ph, salinity, light_level, temperature):
     soil_moisture = check_if_float(soil_moisture)
-    ph = check_if_int(ph)
+    ph = check_if_float(ph)
     salinity = check_if_float(salinity)
     light_level = check_if_int(light_level)
     temperature = check_if_float(temperature)

@@ -31,13 +31,14 @@ def gui():
             if self.user == None:
                 print("Na postoji korisnik s tim korisnickim imenom i lozinkom.")
                 return
-            print(f"Dobro dosli {self.user.name}")
+            print(f"Dobro dosli {self.user.name}.")
             self.clear_root()
             self.create_main_screen()
 
         def logout(self):
             self.clear_root()
             self.create_login_screen()
+            print(f"Dovidenja.")
 
         def on_user_save(self):
             db_update_user(
@@ -559,12 +560,16 @@ def gui():
             # lbl_frm_pot.columnconfigure(minsize=100)
             lbl_frm_pot.grid(row=row, column=column, columnspan=2, padx=5, pady=5)
 
-            plant = db_get_plant_by_id(pot.plant_id)
-            plant_photo = Image.open(plant.photo)
-            plant_photo = plant_photo.resize(IMAGE_SIZE)
-            image = ImageTk.PhotoImage(plant_photo)
-            lbl_image = tk.Label(lbl_frm_pot, image=image)
-            lbl_image.grid(row=row, rowspan=4, column=column)
+            if pot.plant_id:
+                plant = db_get_plant_by_id(pot.plant_id)
+                plant_photo = Image.open(plant.photo)
+                plant_photo = plant_photo.resize(IMAGE_SIZE)
+                image = ImageTk.PhotoImage(plant_photo)
+                lbl_image = tk.Label(lbl_frm_pot, image=image)
+                lbl_image.photo = image
+                lbl_image.grid(row=row, rowspan=4, column=column)
+
+                all_image_labels.append(lbl_image)
 
             lbl_pot_name = tk.Label(lbl_frm_pot, text="Naziv", font=font_label)
             lbl_pot_name.grid(row=row, column=column + 1)
@@ -578,6 +583,8 @@ def gui():
             lbl_pot_status.grid(row=row + 3, column=column + 1)
 
         def show_all_pots(self):
+            for label in all_image_labels:
+                label.destroy()
             self.pots = db_get_pots()
             row = 2
             column = 0
@@ -592,6 +599,7 @@ def gui():
         def on_pot_button(self):
             pass  # TODO
 
+    all_image_labels = []
     root = tk.Tk()
     root.title("Py Flora Posude")
     # root.geometry("1000x600")

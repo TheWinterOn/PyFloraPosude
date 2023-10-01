@@ -29,7 +29,7 @@ LOCATION_KEY = "1606699"  # Crnomerec, Zagreb
 URL = "http://dataservice.accuweather.com/currentconditions/v1/"
 
 
-def sync():
+def sync(pot_name):
     locale.setlocale(locale.LC_TIME, "hr_HR")
 
     # print(dt.datetime.now().strftime("%A %d.%m.%Y %H:%M:%S").capitalize())
@@ -55,6 +55,7 @@ def sync():
 
     db_add_data(
         timestamp,
+        pot_name,
         soil_moisture,
         ph,
         salinity,

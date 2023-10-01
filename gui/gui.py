@@ -1,16 +1,21 @@
 import tkinter as tk
 from tkinter import ttk
-from config import font_btn, font_header, font_label, font_title
+from PIL import Image, ImageTk
+from config import font_btn, font_header, font_label, font_title, IMAGE_SIZE
 from databases.user_database.user_database import db_login, db_get_users, db_update_user
 from databases.plant_and_pot_database.plant_and_pot_database import (
     db_get_plants,
     db_add_plant,
-    db_get_plant,
+    db_get_plant_by_id,
+    db_get_plant_by_name,
     db_update_plant,
     db_remove_plant_photo_uri,
     db_delete_plant,
     check_input_data,
-    db_print_plant,
+    db_add_pot,
+    db_delete_pot,
+    db_get_pot,
+    db_get_pots,
 )
 from sensors.generate_sensor_data import sync
 
@@ -101,6 +106,20 @@ def gui():
         def on_plant_delete(self):
             self.delete_plant_page()
 
+        def on_pot_save(self):
+            db_add_pot(self.pot_name.get(), self.plant_name.get())
+            self.clear_root()
+            self.create_main_screen()
+
+        def on_pot_cancel(self):
+            self.clear_root()
+            self.create_main_screen()
+
+        def on_pot_delete(self):
+            db_delete_pot(self.pot_name.get())
+            self.clear_root()
+            self.create_main_screen()
+
         def set_default_form_values(self):
             self.plant_soil_moisture.set(None)
             self.plant_ph.set(None)
@@ -118,18 +137,18 @@ def gui():
 
         def callbackFunc(self, event):
             drop_menu = event.widget.get()
-            selected_plant = db_get_plant(drop_menu)
+            selected_plant = db_get_plant_by_name(drop_menu)
             selected_plant = db_remove_plant_photo_uri(selected_plant)
-            if self.action != "delete":
+            if self.action == "add" or self.action == "edit":
                 self.plant_id.set(selected_plant.id)
             self.plant_name.set(selected_plant.name)
-            self.plant_photo.set(selected_plant.photo)
-
-            self.plant_soil_moisture.set(selected_plant.soil_moisture)
-            self.plant_ph.set(selected_plant.ph)
-            self.plant_salinity.set(selected_plant.salinity)
-            self.plant_light_level.set(selected_plant.light_level)
-            self.plant_temperature.set(selected_plant.temperature)
+            if self.action != "pot":
+                self.plant_photo.set(selected_plant.photo)
+                self.plant_soil_moisture.set(selected_plant.soil_moisture)
+                self.plant_ph.set(selected_plant.ph)
+                self.plant_salinity.set(selected_plant.salinity)
+                self.plant_light_level.set(selected_plant.light_level)
+                self.plant_temperature.set(selected_plant.temperature)
 
         def get_plant_list(self):
             self.plants = db_get_plants()
@@ -144,6 +163,7 @@ def gui():
                 text="PyFloraPosude",
                 bg="grey",
                 font=font_header,
+                # width=67,
             )
             lbl_header.grid(row=0, column=0, padx=10)
 
@@ -230,9 +250,12 @@ def gui():
                 self.root,
                 highlightbackground="black",
                 highlightthickness=1,
+                # width=1000,
+                # height=550,
             )
             self.frame_body.columnconfigure((0, 1, 2, 3), weight=1, minsize=105)
             self.frame_body.grid(row=1, column=0, columnspan=4)
+            # self.frame_body.grid_propagate(0)
             btn_sync = tk.Button(
                 self.frame_body, text="Sync", font=font_btn, command=sync
             )
@@ -244,8 +267,11 @@ def gui():
                 font=font_btn,
                 justify="center",
                 height=4,
+                command=self.create_new_pot,
             )
-            btn_add_pot.grid(row=2, column=2, padx=5, pady=5)
+            btn_add_pot.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
+
+            self.show_all_pots()
 
         def create_profile_screen(self):
             self.clear_body()
@@ -496,9 +522,75 @@ def gui():
             self.create_drop_down_menu()
             self.create_plant_form()
 
-        # def create_new_pot(self):
-        #     self.clear_body()
-        #     plants = db_get_plants()
+        def create_new_pot(self):
+            self.clear_body()
+            self.action = "pot"
+            lbl_add_pot = tk.Label(
+                self.frame_body, text="Dodaj novu posudu", font=font_title
+            )
+            lbl_add_pot.grid(row=1, column=0, columnspan=4, pady=10)
+            lbl_name = tk.Label(self.frame_body, text="Naziv posude", font=font_label)
+            lbl_name.grid(row=3, column=1)
+            self.pot_name = tk.StringVar()
+            ent_pot_name = tk.Entry(self.frame_body, textvariable=self.pot_name)
+            ent_pot_name.grid(row=4, column=1, padx=5, pady=5)
+
+            self.plant_name = tk.StringVar()
+            self.create_drop_down_menu()
+
+            btn_save = tk.Button(
+                self.frame_body,
+                text="Spremi",
+                font=font_btn,
+                command=self.on_pot_save,
+            )
+            btn_save.grid(row=5, column=1, padx=5, pady=5)
+
+            btn_exit = tk.Button(
+                self.frame_body,
+                text="Odustani",
+                font=font_btn,
+                command=self.on_pot_cancel,
+            )
+            btn_exit.grid(row=5, column=2, padx=5, pady=5)
+
+        def create_pot_frame(self, pot, row, column):
+            lbl_frm_pot = tk.LabelFrame(self.frame_body)
+            # lbl_frm_pot.columnconfigure(minsize=100)
+            lbl_frm_pot.grid(row=row, column=column, columnspan=2, padx=5, pady=5)
+
+            plant = db_get_plant_by_id(pot.plant_id)
+            plant_photo = Image.open(plant.photo)
+            plant_photo = plant_photo.resize(IMAGE_SIZE)
+            image = ImageTk.PhotoImage(plant_photo)
+            lbl_image = tk.Label(lbl_frm_pot, image=image)
+            lbl_image.grid(row=row, rowspan=4, column=column)
+
+            lbl_pot_name = tk.Label(lbl_frm_pot, text="Naziv", font=font_label)
+            lbl_pot_name.grid(row=row, column=column + 1)
+            btn_pot_name = tk.Button(
+                lbl_frm_pot, text=pot.name, command=self.on_pot_button
+            )
+            btn_pot_name.grid(row=row + 1, column=column + 1)
+            pot_status = tk.StringVar()
+            pot_status.set("Status\n" + "OK")
+            lbl_pot_status = tk.Label(lbl_frm_pot, textvariable=pot_status)
+            lbl_pot_status.grid(row=row + 3, column=column + 1)
+
+        def show_all_pots(self):
+            self.pots = db_get_pots()
+            row = 2
+            column = 0
+            for pot in self.pots:
+                if column == 0:
+                    column = 2
+                elif column == 2:
+                    column = 0
+                    row = row + 1
+                self.create_pot_frame(pot, row, column)
+
+        def on_pot_button(self):
+            pass  # TODO
 
     root = tk.Tk()
     root.title("Py Flora Posude")

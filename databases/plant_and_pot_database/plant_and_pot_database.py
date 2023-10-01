@@ -23,8 +23,8 @@ class Plant(Base):
 class Pot(Base):
     __tablename__ = "pot"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
     plant_id = db.Column(db.Integer, db.ForeignKey("plant.id"))
+    name = db.Column(db.String, nullable=False)
 
 
 db_engine = db.create_engine(
@@ -54,9 +54,15 @@ def db_add_plant(name, photo, soil_moisture, ph, salinity, light_level, temperat
         session.commit()
 
 
-def db_get_plant(name):
+def db_get_plant_by_name(name):
     with Session(bind=db_engine) as session:
         plant = session.query(Plant).filter(Plant.name == name).one_or_none()
+        return plant
+
+
+def db_get_plant_by_id(id):
+    with Session(bind=db_engine) as session:
+        plant = session.query(Plant).filter(Plant.id == id).one_or_none()
         return plant
 
 
@@ -85,18 +91,18 @@ def db_update_plant(
         session.commit()
 
 
-# TODO delete this, for testing purposes only
-def db_print_plant(
-    id, name, photo, soil_moisture, ph, salinity, light_level, temperature
-):
-    print(id)
-    print(name)
-    print(photo)
-    print(soil_moisture)
-    print(ph)
-    print(salinity)
-    print(light_level)
-    print(temperature)
+# # TODO delete this, for testing purposes only
+# def db_print_plant(
+#     id, name, photo, soil_moisture, ph, salinity, light_level, temperature
+# ):
+#     print(id)
+#     print(name)
+#     print(photo)
+#     print(soil_moisture)
+#     print(ph)
+#     print(salinity)
+#     print(light_level)
+#     print(temperature)
 
 
 def db_delete_plant(name):
@@ -130,7 +136,7 @@ def add_default_plants():
         ["Aloe Vera", "aloe_vera.jpg"],
         ["Biljka pauk", "biljka_pauk.jpg"],
         ["Hoya", "hoya.jpg"],
-        ["Kaktus", "kaktua.jpg"],
+        ["Kaktus", "kaktus.jpg"],
         ["Kalanhoa", "kalanhoa.jpg"],
         ["Sansevijerija", "sansevijerija.jpg"],
         ["Slonova noga", "slonova_noga.jpg"],
@@ -157,10 +163,15 @@ def add_default_plants():
 
 
 # CRUD Pot
-def db_add_pot(name):
+def db_add_pot(pot_name, plant_name):
     with Session(bind=db_engine) as session:
         # Jedina unikatna stvar u pot bazi su id-evi. Imena nisu unikatna te zbog toga nema provjere.
-        pot = Pot(name=name)
+        pot = Pot(name=pot_name)
+
+        # Biljka se bira iz padajuceg izbornika, tako da sigurno postoji u bazi
+        plant = session.query(Plant).filter(Plant.name == plant_name).one_or_none()
+
+        pot.plant = plant
         session.add(pot)
         session.commit()
 
@@ -207,7 +218,7 @@ def db_delete_pots():
 
 def add_default_pot():
     db_delete_pots()
-    db_add_pot(name="PRAZNA posuda")
+    db_add_pot(pot_name="PRAZNA posuda", plant_name=None)
 
 
 # Handling bad input data

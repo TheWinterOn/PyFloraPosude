@@ -109,3 +109,14 @@ def db_delete_data():
     with Session(bind=db_engine) as session:
         session.query(Data).delete()
         session.commit()
+
+
+def db_get_last_values(pot_name):
+    with Session(bind=db_engine) as session:
+        last_entry = (
+            session.query(Data)
+            .filter(Data.pot_name == pot_name)
+            .order_by(Data.id.desc())
+            .first()
+        )
+    return last_entry

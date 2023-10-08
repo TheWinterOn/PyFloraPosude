@@ -13,13 +13,14 @@ from databases.plant_and_pot_database.plant_and_pot_database import (
     db_delete_plant,
     check_input_data,
     db_add_pot,
-    db_delete_pot,
+    db_update_pot,
     db_get_pot,
     db_get_pots,
+    db_delete_pot,
     sync_all,
 )
-
 from sensors.generate_sensor_data import sync_one
+from databases.sensor_data_database.sensor_data_database import db_get_last_values
 
 
 def gui():
@@ -110,7 +111,10 @@ def gui():
             self.delete_plant_page()
 
         def on_pot_save(self):
-            db_add_pot(self.pot_name.get(), self.plant_name.get())
+            if self.action == "pot":
+                db_add_pot(self.pot_name.get(), self.plant_name.get())
+            if self.action == "prazna":
+                db_update_pot(self.pot_name.get(), self.plant_name.get())
             self.clear_root()
             self.create_main_screen()
 
@@ -123,12 +127,23 @@ def gui():
             self.clear_root()
             self.create_main_screen()
 
+        def on_pot_button(self, pot_name):
+            self.create_pot_screen(pot_name=pot_name)
+
         def set_default_form_values(self):
             self.plant_soil_moisture.set(None)
             self.plant_ph.set(None)
             self.plant_salinity.set(None)
             self.plant_light_level.set(None)
             self.plant_temperature.set(None)
+
+        def set_pot_values_to_last(self, pot_name):
+            data = db_get_last_values(pot_name)
+            self.pot_soil_moisture.set(data.soil_moisture)
+            self.pot_ph.set(data.ph)
+            self.pot_salinity.set(data.salinity)
+            self.pot_light_level.set(data.light_level)
+            self.pot_temperature.set(data.room_temperature)
 
         def clear_root(self):
             for child in self.root.winfo_children():
@@ -138,14 +153,14 @@ def gui():
             for child in self.frame_body.winfo_children():
                 child.destroy()
 
-        def callbackFunc(self, event):
+        def callback_func(self, event):
             drop_menu = event.widget.get()
             selected_plant = db_get_plant_by_name(drop_menu)
             selected_plant = db_remove_plant_photo_uri(selected_plant)
             if self.action == "add" or self.action == "edit":
                 self.plant_id.set(selected_plant.id)
             self.plant_name.set(selected_plant.name)
-            if self.action != "pot":
+            if self.action != "pot" and self.action != "prazna":
                 self.plant_photo.set(selected_plant.photo)
                 self.plant_soil_moisture.set(selected_plant.soil_moisture)
                 self.plant_ph.set(selected_plant.ph)
@@ -238,6 +253,7 @@ def gui():
 
         def create_main_screen(self):
             self.root.geometry("1000x600")
+            self.action = ""
 
             self.frame_header = tk.Frame(
                 self.root, bg="grey", highlightbackground="black", highlightthickness=1
@@ -399,11 +415,16 @@ def gui():
             ent_plant_photo = tk.Entry(self.frame_body, textvariable=self.plant_photo)
             ent_plant_photo.grid(row=6, column=1, columnspan=2, padx=5, pady=5)
 
+            self.plant_soil_moisture = tk.StringVar()
+            self.plant_ph = tk.StringVar()
+            self.plant_salinity = tk.StringVar()
+            self.plant_light_level = tk.StringVar()
+            self.plant_temperature = tk.StringVar()
+
             lbl_soil_moisture = tk.Label(
                 self.frame_body, text="Vlažnost tla", font=font_label
             )
             lbl_soil_moisture.grid(row=7, column=1, columnspan=2)
-            self.plant_soil_moisture = tk.StringVar()
             ent_plant_soil_moisture = tk.Entry(
                 self.frame_body, textvariable=self.plant_soil_moisture
             )
@@ -411,13 +432,11 @@ def gui():
 
             lbl_ph = tk.Label(self.frame_body, text="pH vrijednost", font=font_label)
             lbl_ph.grid(row=9, column=1, columnspan=2)
-            self.plant_ph = tk.StringVar()
             ent_plant_ph = tk.Entry(self.frame_body, textvariable=self.plant_ph)
             ent_plant_ph.grid(row=10, column=1, columnspan=2, padx=5, pady=5)
 
             lbl_salinity = tk.Label(self.frame_body, text="Salinitet", font=font_label)
             lbl_salinity.grid(row=3, column=3, columnspan=2)
-            self.plant_salinity = tk.StringVar()
             ent_plant_salinity = tk.Entry(
                 self.frame_body, textvariable=self.plant_salinity
             )
@@ -427,7 +446,6 @@ def gui():
                 self.frame_body, text="Razina svjetlosti", font=font_label
             )
             lbl_light_level.grid(row=5, column=3, columnspan=2)
-            self.plant_light_level = tk.StringVar()
             ent_plant_light_level = tk.Entry(
                 self.frame_body, textvariable=self.plant_light_level
             )
@@ -437,7 +455,6 @@ def gui():
                 self.frame_body, text="Temperatura", font=font_label
             )
             lbl_temperature.grid(row=7, column=3, columnspan=2)
-            self.plant_temperature = tk.StringVar()
             ent_plant_temperature = tk.Entry(
                 self.frame_body, textvariable=self.plant_temperature
             )
@@ -486,7 +503,7 @@ def gui():
             )
             drop_menu.grid(row=2, column=0, columnspan=6, pady=5)
             drop_menu.current()
-            drop_menu.bind("<<ComboboxSelected>>", self.callbackFunc)
+            drop_menu.bind("<<ComboboxSelected>>", self.callback_func)
 
         def add_plant_page(self):
             self.clear_body()
@@ -527,7 +544,7 @@ def gui():
 
         def create_new_pot(self):
             self.clear_body()
-            self.action = "pot"
+
             lbl_add_pot = tk.Label(
                 self.frame_body, text="Dodaj novu posudu", font=font_title
             )
@@ -539,6 +556,8 @@ def gui():
             ent_pot_name.grid(row=4, column=1, columnspan=2, padx=5, pady=5)
 
             self.plant_name = tk.StringVar()
+            if self.action != "prazna":
+                self.action = "pot"
             self.create_drop_down_menu()
 
             btn_save = tk.Button(
@@ -578,7 +597,7 @@ def gui():
             btn_pot_name = tk.Button(
                 lbl_frm_pot,
                 text=pot.name,
-                # command=self.on_pot_button(pot_name="Boravak"),
+                command=lambda: self.on_pot_button(btn_pot_name.cget("text")),
             )
             btn_pot_name.grid(row=row + 1, column=column + 1, columnspan=2)
             pot_status = tk.StringVar()
@@ -600,16 +619,93 @@ def gui():
                     row = row + 1
                 self.create_pot_frame(pot, row, column)
 
-        def on_pot_button(self, pot_name):
-            self.clear_body()
-            pot = db_get_pot(pot_name)
-            btn_sync = tk.Button(
-                self.frame_body, text="Sync", font=font_btn, command=sync_one
-            )
-            btn_sync.grid(row=1, column=5, padx=5, pady=5, ipadx=5, ipady=5)
+        def create_pot_screen(self, pot_name):
+            if pot_name == "PRAZNA posuda":
+                self.action = "prazna"
+                self.create_new_pot()
+            else:
+                self.clear_body()
+                pot = db_get_pot(pot_name)
+                btn_sync = tk.Button(
+                    self.frame_body,
+                    text="Sync",
+                    font=font_btn,
+                    command=sync_one(pot.name),
+                )
+                btn_sync.grid(row=1, column=5, padx=5, pady=5, ipadx=5, ipady=5)
 
-            lbl_pot_name = tk.Label(self.frame_body, text=pot.name, font=font_header)
-            lbl_pot_name.grid(row=2, column=0)
+                lbl_pot_name = tk.Label(self.frame_body, text=pot.name, font=font_title)
+                lbl_pot_name.grid(row=2, column=0)
+
+                btn_return = tk.Button(
+                    self.frame_body,
+                    text="Povratak",
+                    font=font_btn,
+                    command=self.on_user_cancel,
+                )
+                btn_return.grid(row=2, column=5, padx=5, pady=5, ipadx=5, ipady=5)
+
+                self.pot_soil_moisture = tk.StringVar()
+                self.pot_ph = tk.StringVar()
+                self.pot_salinity = tk.StringVar()
+                self.pot_light_level = tk.StringVar()
+                self.pot_temperature = tk.StringVar()
+
+                self.set_pot_values_to_last(pot_name=pot.name)
+
+                lbl_pot_moisture = tk.Label(
+                    self.frame_body, text="Vlaznost tla", font=font_label
+                )
+                lbl_pot_moisture.grid(row=3, column=0)
+                lbl_moisture_value = tk.Label(
+                    self.frame_body,
+                    textvariable=self.pot_soil_moisture,
+                    font=font_label,
+                )
+                lbl_moisture_value.grid(row=3, column=1)
+
+                lbl_pot_ph = tk.Label(self.frame_body, text="pH", font=font_label)
+                lbl_pot_ph.grid(row=4, column=0)
+                lbl_ph_value = tk.Label(
+                    self.frame_body, textvariable=self.pot_ph, font=font_label
+                )
+                lbl_ph_value.grid(row=4, column=1)
+
+                lbl_pot_salinity = tk.Label(
+                    self.frame_body, text="Salinitet", font=font_label
+                )
+                lbl_pot_salinity.grid(row=5, column=0)
+                lbl_salinity_value = tk.Label(
+                    self.frame_body, textvariable=self.pot_salinity, font=font_label
+                )
+                lbl_salinity_value.grid(row=5, column=1)
+
+                lbl_pot_light = tk.Label(
+                    self.frame_body, text="Razina svjetlosti", font=font_label
+                )
+                lbl_pot_light.grid(row=6, column=0)
+                lbl_light_value = tk.Label(
+                    self.frame_body, textvariable=self.pot_light_level, font=font_label
+                )
+                lbl_light_value.grid(row=6, column=1)
+
+                lbl_pot_temperature = tk.Label(
+                    self.frame_body, text="Temperature sobe", font=font_label
+                )
+                lbl_pot_temperature.grid(row=7, column=0)
+                lbl_temperature_value = tk.Label(
+                    self.frame_body, textvariable=self.pot_temperature, font=font_label
+                )
+                lbl_temperature_value.grid(row=7, column=1)
+
+                if pot.plant_id:
+                    plant = db_get_plant_by_id(pot.plant_id)
+                    plant_photo = Image.open(plant.photo)
+                    plant_photo = plant_photo.resize(IMAGE_SIZE)
+                    image = ImageTk.PhotoImage(plant_photo)
+                    lbl_image = tk.Label(self.frame_body, image=image)
+                    lbl_image.photo = image
+                    lbl_image.grid(row=3, rowspan=7, column=3)
 
     all_image_labels = []
     root = tk.Tk()

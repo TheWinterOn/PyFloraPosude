@@ -167,10 +167,20 @@ def add_default_plants():
 def db_add_pot(pot_name, plant_name):
     with Session(bind=db_engine) as session:
         # Jedina unikatna stvar u pot bazi su id-evi. Imena nisu unikatna te zbog toga nema provjere.
-        pot = Pot(name=pot_name)
+        # Provjera da li posuda prazna
+        if not pot_name:
+            pot = Pot(name="PRAZNA posuda")
+        elif "prazna" in pot_name.lower() or not plant_name:
+            pot = Pot(name="PRAZNA posuda")
+        else:
+            pot = Pot(name=pot_name)
 
         # Biljka se bira iz padajuceg izbornika, tako da sigurno postoji u bazi
-        plant = session.query(Plant).filter(Plant.name == plant_name).one_or_none()
+        # Ako nije odabrana ni jedna biljka iz izbornika onda se ovaj korak preskace
+        if plant_name and pot.name != "PRAZNA posuda":
+            plant = session.query(Plant).filter(Plant.name == plant_name).one_or_none()
+        else:
+            plant = None
 
         pot.plant = plant
         session.add(pot)
@@ -179,7 +189,10 @@ def db_add_pot(pot_name, plant_name):
 
 def db_get_pot(name):
     with Session(bind=db_engine) as session:
-        pot = session.query(Pot).filter(Pot.name == name).one_or_none()
+        # if name == "PRAZNA posuda":
+        pot = session.query(Pot).filter(Pot.name == name).first()
+        # else:
+        #     pot = session.query(Pot).filter(Pot.name == name).first()
         return pot
 
 
@@ -189,14 +202,19 @@ def db_get_pots():
         return pots
 
 
-def db_update_pot(id, name):
+def db_update_pot(pot_name, plant_name):
     with Session(bind=db_engine) as session:
-        current_pot = session.query(Pot).filter(Pot.id == id)
-        current_pot.update(
-            values={
-                "name": name,
-            }
+        if not plant_name or not pot_name:
+            return
+        elif "prazan" in pot_name.lower():
+            return
+        current_pot = db_get_pot("PRAZNA posuda")
+        plant = db_get_plant_by_name(plant_name)
+
+        pot = session.query(Pot).filter(
+            db.and_(Pot.id == current_pot.id, Pot.name == "PRAZNA posuda")
         )
+        pot.update(values={"name": pot_name, "plant_id": plant.id})
         session.commit()
 
 

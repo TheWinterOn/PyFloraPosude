@@ -166,14 +166,19 @@ def add_default_plants():
 # CRUD Pot
 def db_add_pot(pot_name, plant_name):
     with Session(bind=db_engine) as session:
-        # Jedina unikatna stvar u pot bazi su id-evi. Imena nisu unikatna te zbog toga nema provjere.
+        # Imena posuda su unikatna osim ako je posuda prazna. Sve prazne posude imaju ime PRAZNA posuda.
         # Provjera da li posuda prazna
         if not pot_name:
             pot = Pot(name="PRAZNA posuda")
         elif "prazna" in pot_name.lower() or not plant_name:
             pot = Pot(name="PRAZNA posuda")
         else:
-            pot = Pot(name=pot_name)
+            pot = session.query(Pot).filter(Pot.name == pot_name).one_or_none()
+            if pot:
+                print("Posuda s tim imenom vec postoji! Odaberite drugo ime!")
+                return
+            else:
+                pot = Pot(name=pot_name)
 
         # Biljka se bira iz padajuceg izbornika, tako da sigurno postoji u bazi
         # Ako nije odabrana ni jedna biljka iz izbornika onda se ovaj korak preskace
@@ -189,10 +194,7 @@ def db_add_pot(pot_name, plant_name):
 
 def db_get_pot(name):
     with Session(bind=db_engine) as session:
-        # if name == "PRAZNA posuda":
         pot = session.query(Pot).filter(Pot.name == name).first()
-        # else:
-        #     pot = session.query(Pot).filter(Pot.name == name).first()
         return pot
 
 
@@ -208,6 +210,11 @@ def db_update_pot(pot_name, plant_name):
             return
         elif "prazan" in pot_name.lower():
             return
+        pot = session.query(Pot).filter(Pot.name == pot_name).one_or_none()
+        if pot:
+            print("Posuda s tim imenom vec postoji! Odaberite drugo ime!")
+            return
+
         current_pot = db_get_pot("PRAZNA posuda")
         plant = db_get_plant_by_name(plant_name)
 
@@ -218,9 +225,17 @@ def db_update_pot(pot_name, plant_name):
         session.commit()
 
 
-def db_delete_pot(name):
+def db_remove_plant_from_pot(pot_name):
     with Session(bind=db_engine) as session:
-        pot = session.query(Pot).filter(Pot.name == name).one_or_none()
+        current_pot = db_get_pot(pot_name)
+        pot = session.query(Pot).filter(Pot.id == current_pot.id)
+        pot.update(values={"name": "PRAZNA posuda", "plant_id": None})
+        session.commit()
+
+
+def db_delete_pot(pot_name):
+    with Session(bind=db_engine) as session:
+        pot = session.query(Pot).filter(Pot.name == pot_name).first()
 
         if pot:
             session.delete(pot)

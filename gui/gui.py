@@ -14,13 +14,17 @@ from databases.plant_and_pot_database.plant_and_pot_database import (
     check_input_data,
     db_add_pot,
     db_update_pot,
+    db_remove_plant_from_pot,
     db_get_pot,
     db_get_pots,
     db_delete_pot,
     sync_all,
 )
 from sensors.generate_sensor_data import sync_one
-from databases.sensor_data_database.sensor_data_database import db_get_last_values
+from databases.sensor_data_database.sensor_data_database import (
+    db_get_last_values,
+    db_delete_pot_data,
+)
 
 
 def gui():
@@ -35,8 +39,7 @@ def gui():
                 print("Na postoji korisnik s tim korisnickim imenom i lozinkom.")
                 return
             print(f"Dobro dosli {self.user.name}.")
-            self.clear_root()
-            self.create_main_screen()
+            self.back_to_main_screen()
 
         def logout(self):
             self.clear_root()
@@ -54,8 +57,7 @@ def gui():
             self.on_user_cancel()
 
         def on_user_cancel(self):
-            self.clear_root()
-            self.create_main_screen()
+            self.back_to_main_screen()
 
         def on_plant_save(self):
             (
@@ -115,20 +117,30 @@ def gui():
                 db_add_pot(self.pot_name.get(), self.plant_name.get())
             if self.action == "prazna":
                 db_update_pot(self.pot_name.get(), self.plant_name.get())
-            self.clear_root()
-            self.create_main_screen()
+            self.back_to_main_screen()
+
+        def on_pot_clear(self, pot_name):
+            db_remove_plant_from_pot(pot_name)
+            db_delete_pot_data(pot_name)
+            self.back_to_main_screen()
 
         def on_pot_cancel(self):
-            self.clear_root()
-            self.create_main_screen()
+            self.back_to_main_screen()
+
+        def on_pot_remove(self):
+            db_delete_pot("PRAZNA posuda")
+            self.back_to_main_screen()
 
         def on_pot_delete(self):
             db_delete_pot(self.pot_name.get())
-            self.clear_root()
-            self.create_main_screen()
+            self.back_to_main_screen()
 
         def on_pot_button(self, pot_name):
             self.create_pot_screen(pot_name=pot_name)
+
+        def back_to_main_screen(self):
+            self.clear_root()
+            self.create_main_screen()
 
         def set_default_form_values(self):
             self.plant_soil_moisture.set(None)
@@ -252,7 +264,7 @@ def gui():
             btn_login.pack(pady=10)
 
         def create_main_screen(self):
-            self.root.geometry("1000x600")
+            self.root.geometry("1000x800")
             self.action = ""
 
             self.frame_header = tk.Frame(
@@ -269,12 +281,13 @@ def gui():
                 self.root,
                 highlightbackground="black",
                 highlightthickness=1,
-                # width=1000,
-                # height=550,
+                width=1000,
+                height=700,
             )
             self.frame_body.columnconfigure((0, 1, 2, 3, 4, 5), weight=1, minsize=105)
             self.frame_body.grid(row=1, column=0, columnspan=6)
             # self.frame_body.grid_propagate(0)
+
             btn_sync = tk.Button(
                 self.frame_body, text="Sync", font=font_btn, command=sync_all
             )
@@ -566,7 +579,7 @@ def gui():
                 font=font_btn,
                 command=self.on_pot_save,
             )
-            btn_save.grid(row=5, column=1, columnspan=2, padx=5, pady=5)
+            btn_save.grid(row=5, column=0, columnspan=2, padx=5, pady=5)
 
             btn_exit = tk.Button(
                 self.frame_body,
@@ -574,7 +587,15 @@ def gui():
                 font=font_btn,
                 command=self.on_pot_cancel,
             )
-            btn_exit.grid(row=5, column=3, columnspan=2, padx=5, pady=5)
+            btn_exit.grid(row=5, column=2, columnspan=2, padx=5, pady=5)
+
+            btn_remove = tk.Button(
+                self.frame_body,
+                text="Ukloni posudu",
+                font=font_btn,
+                command=self.on_pot_remove,
+            )
+            btn_remove.grid(row=5, column=4, columnspan=2, padx=5, pady=5)
 
         def create_pot_frame(self, pot, row, column):
             lbl_frm_pot = tk.LabelFrame(self.frame_body)
@@ -636,6 +657,14 @@ def gui():
 
                 lbl_pot_name = tk.Label(self.frame_body, text=pot.name, font=font_title)
                 lbl_pot_name.grid(row=2, column=0)
+
+                btn_clear = tk.Button(
+                    self.frame_body,
+                    text="Isprazni",
+                    font=font_btn,
+                    command=lambda: self.on_pot_clear(lbl_pot_name.cget("text")),
+                )
+                btn_clear.grid(row=2, column=4, padx=5, pady=5, ipadx=5, ipady=5)
 
                 btn_return = tk.Button(
                     self.frame_body,

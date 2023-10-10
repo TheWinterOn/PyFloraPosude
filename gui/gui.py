@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from config import font_btn, font_header, font_label, font_title, IMAGE_SIZE
 from databases.user_database.user_database import db_login, db_get_users, db_update_user
 from databases.plant_and_pot_database.plant_and_pot_database import (
@@ -24,6 +26,7 @@ from databases.plant_and_pot_database.plant_and_pot_database import (
 from sensors.generate_sensor_data import sync_one
 from databases.sensor_data_database.sensor_data_database import (
     db_get_last_values,
+    db_get_data_by_name,
     db_delete_pot_data,
 )
 
@@ -177,6 +180,9 @@ def gui():
             elif "empty" in list_status:
                 self.pot_status.set("PRAZNA posuda")
                 self.pot_icon.set(f"{URI_ICON}empty.png")
+            elif "broken" in list_status:
+                self.pot_status.set("POKVARENA posuda")
+                self.pot_icon.set(f"{URI_ICON}broken.png")
             else:
                 self.pot_status.set(", ".join(list_status))
                 self.pot_icon.set(f"{URI_ICON}warning.png")
@@ -210,6 +216,38 @@ def gui():
             for plant in self.plants:
                 plant_names.append(plant.name)
             return plant_names
+
+        def on_click_graph(self, pot_name, graph_type):
+            data = db_get_data_by_name(pot_name)
+            for i in range(5):
+                self.ax[i].clear()
+            dict_data = {
+                "moisture": [],
+                "ph": [],
+                "salinity": [],
+                "light_level": [],
+                "room_temperature": [],
+            }
+
+            for item in data:
+                dict_data["moisture"].append(item.soil_moisture)
+                dict_data["ph"].append(item.ph)
+                dict_data["salinity"].append(item.salinity)
+                dict_data["light_level"].append(item.light_level)
+                dict_data["room_temperature"].append(item.room_temperature)
+            x = range(1, len(data) + 1)
+
+            if graph_type == "Line":
+                for i, value in enumerate(dict_data.values(), 0):
+                    self.ax[i].plot(x, value, c="g")
+            elif graph_type == "Pie":
+                for i, value in enumerate(dict_data.values(), 0):
+                    self.ax[i].pie(value)
+            elif graph_type == "Histo":
+                for i, value in enumerate(dict_data.values(), 0):
+                    self.ax[i].hist(value)
+
+            self.canvas.draw()
 
         def create_header(self):
             lbl_header = tk.Label(
@@ -791,11 +829,44 @@ def gui():
                 lbl_icon.photo = icon
                 lbl_icon.grid(row=8, column=5, pady=5)
 
+                btn_line = tk.Button(
+                    self.frame_body,
+                    text="Line",
+                    font=font_btn,
+                    command=lambda: self.on_click_graph(
+                        lbl_pot_name.cget("text"), btn_line.cget("text")
+                    ),
+                )
+                btn_line.grid(row=9, column=3, padx=5, pady=5, ipadx=5, ipady=5)
+
+                btn_pie = tk.Button(
+                    self.frame_body,
+                    text="Pie",
+                    font=font_btn,
+                    command=lambda: self.on_click_graph(
+                        lbl_pot_name.cget("text"), btn_pie.cget("text")
+                    ),
+                )
+                btn_pie.grid(row=9, column=4, padx=5, pady=5, ipadx=5, ipady=5)
+
+                btn_histo = tk.Button(
+                    self.frame_body,
+                    text="Histo",
+                    font=font_btn,
+                    command=lambda: self.on_click_graph(
+                        lbl_pot_name.cget("text"), btn_histo.cget("text")
+                    ),
+                )
+                btn_histo.grid(row=9, column=5, padx=5, pady=5, ipadx=5, ipady=5)
+
+                fig, self.ax = plt.subplots(5, figsize=(10, 5))
+                self.canvas = FigureCanvasTkAgg(fig, master=self.frame_body)
+                self.canvas.get_tk_widget().grid(row=10, column=0, columnspan=6)
+
     all_image_labels = []
     all_icon_labels = []
     root = tk.Tk()
     root.title("Py Flora Posude")
-    # root.geometry("1000x600")
     py_flora_posude = PyFloraPosude(root)
 
     root.mainloop()

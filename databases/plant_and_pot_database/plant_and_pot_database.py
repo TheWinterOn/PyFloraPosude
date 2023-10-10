@@ -1,4 +1,5 @@
 import sqlalchemy as db
+import random
 from sqlalchemy.orm import Session, relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 from sensors.generate_sensor_data import sync_one
@@ -90,20 +91,6 @@ def db_update_plant(
             }
         )
         session.commit()
-
-
-# # TODO delete this, for testing purposes only
-# def db_print_plant(
-#     id, name, photo, soil_moisture, ph, salinity, light_level, temperature
-# ):
-#     print(id)
-#     print(name)
-#     print(photo)
-#     print(soil_moisture)
-#     print(ph)
-#     print(salinity)
-#     print(light_level)
-#     print(temperature)
 
 
 def db_delete_plant(name):
@@ -301,7 +288,7 @@ def check_if_float(value):
 def sync_all():
     pots = db_get_pots()
     for pot in pots:
-        if pot.name != "PRAZNA posuda":  # TODO dodati uvijet za potrganu posudu
+        if pot.name != "PRAZNA posuda" and pot.name != "POKVARENA posuda":
             sync_one(pot.name)
 
 
@@ -340,5 +327,10 @@ def check_pot_status(pot_name, data):
             list_status.append("Prehladno")
         if data.room_temperature > plant.temperature + 5:
             list_status.append("Pretoplo")
+
+    chance = random.randint(1, 50)
+    if chance == 50:
+        list_status = ["broken"]
+        return list_status
 
     return list_status

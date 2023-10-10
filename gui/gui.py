@@ -19,12 +19,16 @@ from databases.plant_and_pot_database.plant_and_pot_database import (
     db_get_pots,
     db_delete_pot,
     sync_all,
+    check_pot_status,
 )
 from sensors.generate_sensor_data import sync_one
 from databases.sensor_data_database.sensor_data_database import (
     db_get_last_values,
     db_delete_pot_data,
 )
+
+
+URI_ICON = "gui/icons/"
 
 
 def gui():
@@ -39,12 +43,17 @@ def gui():
                 print("Na postoji korisnik s tim korisnickim imenom i lozinkom.")
                 return
             print(f"Dobro dosli {self.user.name}.")
+            self.initialize()
             self.back_to_main_screen()
 
         def logout(self):
             self.clear_root()
             self.create_login_screen()
             print(f"Dovidenja.")
+
+        def initialize(self):
+            self.pot_status = tk.StringVar()
+            self.pot_icon = tk.StringVar()
 
         def on_user_save(self):
             db_update_user(
@@ -157,6 +166,21 @@ def gui():
             self.pot_light_level.set(data.light_level)
             self.pot_temperature.set(data.room_temperature)
 
+        def perform_status_check(self, pot_name, data):
+            list_status = check_pot_status(pot_name, data)
+            self.set_pot_status(list_status)
+
+        def set_pot_status(self, list_status):
+            if not list_status:
+                self.pot_status.set("OK")
+                self.pot_icon.set(f"{URI_ICON}good.png")
+            elif "empty" in list_status:
+                self.pot_status.set("PRAZNA posuda")
+                self.pot_icon.set(f"{URI_ICON}empty.png")
+            else:
+                self.pot_status.set(", ".join(list_status))
+                self.pot_icon.set(f"{URI_ICON}warning.png")
+
         def clear_root(self):
             for child in self.root.winfo_children():
                 child.destroy()
@@ -264,7 +288,7 @@ def gui():
             btn_login.pack(pady=10)
 
         def create_main_screen(self):
-            self.root.geometry("1000x800")
+            self.root.geometry("1000x900")
             self.action = ""
 
             self.frame_header = tk.Frame(
@@ -282,7 +306,7 @@ def gui():
                 highlightbackground="black",
                 highlightthickness=1,
                 width=1000,
-                height=700,
+                height=800,
             )
             self.frame_body.columnconfigure((0, 1, 2, 3, 4, 5), weight=1, minsize=105)
             self.frame_body.grid(row=1, column=0, columnspan=6)
@@ -613,6 +637,17 @@ def gui():
 
                 all_image_labels.append(lbl_image)
 
+            data = db_get_last_values(pot.name)
+            self.perform_status_check(pot.name, data)
+
+            status_icon = Image.open(self.pot_icon.get())
+            icon = ImageTk.PhotoImage(status_icon)
+            lbl_icon = tk.Label(lbl_frm_pot, image=icon)
+            lbl_icon.photo = icon
+            lbl_icon.grid(row=row + 3, column=column + 2)
+
+            all_icon_labels.append(lbl_icon)
+
             lbl_pot_name = tk.Label(lbl_frm_pot, text="Naziv", font=font_label)
             lbl_pot_name.grid(row=row, column=column + 1, columnspan=2)
             btn_pot_name = tk.Button(
@@ -621,14 +656,12 @@ def gui():
                 command=lambda: self.on_pot_button(btn_pot_name.cget("text")),
             )
             btn_pot_name.grid(row=row + 1, column=column + 1, columnspan=2)
-            pot_status = tk.StringVar()
-            pot_status.set("Status\n" + "OK")
-            lbl_pot_status = tk.Label(lbl_frm_pot, textvariable=pot_status)
-            lbl_pot_status.grid(row=row + 3, column=column + 1, columnspan=2)
 
         def show_all_pots(self):
             for label in all_image_labels:
                 label.destroy()
+            for icon in all_icon_labels:
+                icon.destroy()
             self.pots = db_get_pots()
             row = 2
             column = 0
@@ -664,7 +697,7 @@ def gui():
                     font=font_btn,
                     command=lambda: self.on_pot_clear(lbl_pot_name.cget("text")),
                 )
-                btn_clear.grid(row=2, column=4, padx=5, pady=5, ipadx=5, ipady=5)
+                btn_clear.grid(row=2, column=5, padx=5, pady=5, ipadx=5, ipady=5)
 
                 btn_return = tk.Button(
                     self.frame_body,
@@ -672,7 +705,7 @@ def gui():
                     font=font_btn,
                     command=self.on_user_cancel,
                 )
-                btn_return.grid(row=2, column=5, padx=5, pady=5, ipadx=5, ipady=5)
+                btn_return.grid(row=3, column=5, padx=5, pady=5, ipadx=5, ipady=5)
 
                 self.pot_soil_moisture = tk.StringVar()
                 self.pot_ph = tk.StringVar()
@@ -683,49 +716,62 @@ def gui():
                 self.set_pot_values_to_last(pot_name=pot.name)
 
                 lbl_pot_moisture = tk.Label(
-                    self.frame_body, text="Vlaznost tla", font=font_label
+                    self.frame_body, text="Vlaznost tla (%):", font=font_label
                 )
-                lbl_pot_moisture.grid(row=3, column=0)
+                lbl_pot_moisture.grid(row=3, column=0, padx=10, sticky="w")
                 lbl_moisture_value = tk.Label(
                     self.frame_body,
                     textvariable=self.pot_soil_moisture,
                     font=font_label,
                 )
-                lbl_moisture_value.grid(row=3, column=1)
+                lbl_moisture_value.grid(row=3, column=1, padx=10, sticky="w")
 
-                lbl_pot_ph = tk.Label(self.frame_body, text="pH", font=font_label)
-                lbl_pot_ph.grid(row=4, column=0)
+                lbl_pot_ph = tk.Label(self.frame_body, text="pH:", font=font_label)
+                lbl_pot_ph.grid(row=4, column=0, padx=10, sticky="w")
                 lbl_ph_value = tk.Label(
                     self.frame_body, textvariable=self.pot_ph, font=font_label
                 )
-                lbl_ph_value.grid(row=4, column=1)
+                lbl_ph_value.grid(row=4, column=1, padx=10, sticky="w")
 
                 lbl_pot_salinity = tk.Label(
-                    self.frame_body, text="Salinitet", font=font_label
+                    self.frame_body, text="Salinitet (%):", font=font_label
                 )
-                lbl_pot_salinity.grid(row=5, column=0)
+                lbl_pot_salinity.grid(row=5, column=0, padx=10, sticky="w")
                 lbl_salinity_value = tk.Label(
                     self.frame_body, textvariable=self.pot_salinity, font=font_label
                 )
-                lbl_salinity_value.grid(row=5, column=1)
+                lbl_salinity_value.grid(row=5, column=1, padx=10, sticky="w")
 
                 lbl_pot_light = tk.Label(
-                    self.frame_body, text="Razina svjetlosti", font=font_label
+                    self.frame_body, text="Razina svjetlosti (Lux):", font=font_label
                 )
-                lbl_pot_light.grid(row=6, column=0)
+                lbl_pot_light.grid(row=6, column=0, padx=10, sticky="w")
                 lbl_light_value = tk.Label(
                     self.frame_body, textvariable=self.pot_light_level, font=font_label
                 )
-                lbl_light_value.grid(row=6, column=1)
+                lbl_light_value.grid(row=6, column=1, padx=10, sticky="w")
 
                 lbl_pot_temperature = tk.Label(
-                    self.frame_body, text="Temperature sobe", font=font_label
+                    self.frame_body, text="Temperature sobe (°C):", font=font_label
                 )
-                lbl_pot_temperature.grid(row=7, column=0)
+                lbl_pot_temperature.grid(row=7, column=0, padx=10, sticky="w")
                 lbl_temperature_value = tk.Label(
                     self.frame_body, textvariable=self.pot_temperature, font=font_label
                 )
-                lbl_temperature_value.grid(row=7, column=1)
+                lbl_temperature_value.grid(row=7, column=1, padx=10, sticky="w")
+
+                lbl_pot_status = tk.Label(
+                    self.frame_body, text="Status:", font=font_label
+                )
+                lbl_pot_status.grid(row=8, column=0, padx=10, sticky="w")
+                lbl_pot_status_value = tk.Label(
+                    self.frame_body,
+                    textvariable=self.pot_status,
+                    font=font_label,
+                    justify="left",
+                    anchor="w",
+                )
+                lbl_pot_status_value.grid(row=8, column=1, padx=10, sticky="w")
 
                 if pot.plant_id:
                     plant = db_get_plant_by_id(pot.plant_id)
@@ -734,11 +780,22 @@ def gui():
                     image = ImageTk.PhotoImage(plant_photo)
                     lbl_image = tk.Label(self.frame_body, image=image)
                     lbl_image.photo = image
-                    lbl_image.grid(row=3, rowspan=7, column=3)
+                    lbl_image.grid(row=3, rowspan=6, column=3, columnspan=2)
+
+                data = db_get_last_values(pot.name)
+                self.perform_status_check(pot.name, data)
+
+                status_icon = Image.open(self.pot_icon.get())
+                icon = ImageTk.PhotoImage(status_icon)
+                lbl_icon = tk.Label(self.frame_body, image=icon)
+                lbl_icon.photo = icon
+                lbl_icon.grid(row=8, column=5, pady=5)
 
     all_image_labels = []
+    all_icon_labels = []
     root = tk.Tk()
     root.title("Py Flora Posude")
     # root.geometry("1000x600")
     py_flora_posude = PyFloraPosude(root)
+
     root.mainloop()

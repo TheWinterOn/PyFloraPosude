@@ -5,7 +5,7 @@ from requests import Session
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
 from databases.sensor_data_database.sensor_data_database import (
     db_add_data,
-    db_get_data,
+    db_get_all_data,
     db_delete_data,
 )
 
@@ -17,11 +17,11 @@ MIN_SOIL_MOISTURE = 1.0
 MAX_SOIL_MOISTURE = 30.0
 MIN_PH = 0.0
 MAX_PH = 14.0
-MIN_SALINITY = 1.0
+MIN_SALINITY = 0.0
 MAX_SALINITY = 5.0
 MIN_LIGHT_LEVEL = 200
-MAX_LIGHT_LEVEL = 10000
-MIN_ROOM_TEMPERATURE = 18.0
+MAX_LIGHT_LEVEL = 5000
+MIN_ROOM_TEMPERATURE = 15.0
 MAX_ROOM_TEMPERATURE = 35.0
 MIN_TEMPERATURE_ALGEBRA = -25.0
 MAX_TEMPERATURE_ALGEBRA = 45.0

@@ -69,7 +69,13 @@ def db_add_data(
         session.commit()
 
 
-def db_get_data():
+def db_get_data_by_name(pot_name):
+    with Session(bind=db_engine) as session:
+        data = session.query(Data).filter(Data.pot_name == pot_name).all()
+        return data
+
+
+def db_get_all_data():
     with Session(bind=db_engine) as session:
         data = session.query(Data).all()
         return data
@@ -119,6 +125,8 @@ def db_delete_pot_data(pot_name):
 
 def db_get_last_values(pot_name):
     with Session(bind=db_engine) as session:
+        if pot_name == "PRAZNA posuda":
+            return None
         last_entry = (
             session.query(Data)
             .filter(Data.pot_name == pot_name)

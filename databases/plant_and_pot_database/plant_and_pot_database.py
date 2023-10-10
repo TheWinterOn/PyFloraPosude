@@ -133,33 +133,33 @@ def add_default_plants():
     db_delete_plants()
 
     predefined_plants = [
-        ["Aglaonema", "aglaonema.jpg"],
-        ["Aloe Vera", "aloe_vera.jpg"],
-        ["Biljka pauk", "biljka_pauk.jpg"],
-        ["Hoya", "hoya.jpg"],
-        ["Kaktus", "kaktus.jpg"],
-        ["Kalanhoa", "kalanhoa.jpg"],
-        ["Sansevijerija", "sansevijerija.jpg"],
-        ["Slonova noga", "slonova_noga.jpg"],
-        ["Zebra Haworthija", "zebra_haworthija.jpg"],
-        ["Zamija", "zamija.jpg"],
-        ["Zlatni puzavac", "zlatni_puzavac.jpg"],
+        ["Aglaonema", "aglaonema.jpg", 20.7, 4.0, 0.6, 800, 22.0],
+        ["Aloe Vera", "aloe_vera.jpg", 14.1, 8.7, 4.4, 2300, 24.5],
+        ["Biljka pauk", "biljka_pauk.jpg", 8.3, 3.5, 2.5, 1700, 18.5],
+        ["Hoya", "hoya.jpg", 19.0, 11.9, 2.8, 1100, 18.0],
+        ["Kaktus", "kaktus.jpg", 15.2, 10.6, 1.7, 4500, 32.0],
+        ["Kalanhoa", "kalanhoa.jpg", 4.8, 7.2, 3.1, 3200, 19.0],
+        ["Sansevijerija", "sansevijerija.jpg", 12.7, 3.1, 3.5, 1300, 17.5],
+        ["Slonova noga", "slonova_noga.jpg", 9.1, 7.6, 3.8, 600, 23.0],
+        ["Zebra Haworthija", "zebra_haworthija.jpg", 22.2, 4.8, 1.4, 3800, 26.0],
+        ["Zamija", "zamija.jpg", 10.8, 2.7, 1.7, 2100, 23.5],
+        ["Zlatni puzavac", "zlatni_puzavac.jpg", 6.4, 9.9, 3.7, 4000, 30.5],
     ]
 
     for plant in predefined_plants:
         db_add_plant(
             name=plant[0],
             photo=plant[1],
-            # soil_moisture=plant[2],
-            # ph=plant[3],
-            # salinity=plant[4],
-            # light_level=plant[5],
-            # temperature=plant[6],
-            soil_moisture=None,
-            ph=None,
-            salinity=None,
-            light_level=None,
-            temperature=None,
+            soil_moisture=plant[2],
+            ph=plant[3],
+            salinity=plant[4],
+            light_level=plant[5],
+            temperature=plant[6],
+            # soil_moisture=None,
+            # ph=None,
+            # salinity=None,
+            # light_level=None,
+            # temperature=None,
         )
 
 
@@ -190,6 +190,9 @@ def db_add_pot(pot_name, plant_name):
         pot.plant = plant
         session.add(pot)
         session.commit()
+
+        if pot.name != "PRAZNA posuda":
+            sync_one(pot.name)
 
 
 def db_get_pot(name):
@@ -224,6 +227,8 @@ def db_update_pot(pot_name, plant_name):
         pot.update(values={"name": pot_name, "plant_id": plant.id})
         session.commit()
 
+        sync_one(pot_name)
+
 
 def db_remove_plant_from_pot(pot_name):
     with Session(bind=db_engine) as session:
@@ -255,7 +260,7 @@ def add_default_pot():
     db_add_pot(pot_name="PRAZNA posuda", plant_name=None)
     db_add_pot(pot_name="Boravak", plant_name="Kaktus")
     db_add_pot(pot_name="Kuhinja", plant_name="Hoya")
-    sync_all()
+    # sync_all()
 
 
 # Handling bad input data
@@ -298,3 +303,42 @@ def sync_all():
     for pot in pots:
         if pot.name != "PRAZNA posuda":  # TODO dodati uvijet za potrganu posudu
             sync_one(pot.name)
+
+
+# Provjera statusa posude. Usporedba zadnjeg mjerenja senzora s podacima za biljku koja se nalazi u posudi
+def check_pot_status(pot_name, data):
+    pot = db_get_pot(pot_name)
+    plant = db_get_plant_by_id(pot.plant_id)
+    list_status = []
+
+    if pot_name == "PRAZNA posuda":
+        list_status = ["empty"]
+        return list_status
+
+    if plant.soil_moisture:
+        if data.soil_moisture < plant.soil_moisture - 5:
+            list_status.append("Dodati vode")
+        if data.soil_moisture > plant.soil_moisture + 5:
+            list_status.append("Previse vode")
+    if plant.ph:
+        if data.ph < plant.ph - 2:
+            list_status.append("Kiselo tlo")
+        if data.ph > plant.ph + 2:
+            list_status.append("Luznato tlo")
+    if plant.salinity:
+        if data.salinity < plant.salinity - 1:
+            list_status.append("Previse soli u tlu")
+        if data.salinity > plant.salinity + 1:
+            list_status.append("Premalo soli u tlu")
+    if plant.light_level:
+        if data.light_level < plant.light_level - 500:
+            list_status.append("Premalo svjetla")
+        if data.light_level > plant.light_level + 500:
+            list_status.append("Previse svjetla")
+    if plant.temperature:
+        if data.room_temperature < plant.temperature - 5:
+            list_status.append("Prehladno")
+        if data.room_temperature > plant.temperature + 5:
+            list_status.append("Pretoplo")
+
+    return list_status
